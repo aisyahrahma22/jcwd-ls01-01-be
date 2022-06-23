@@ -9,7 +9,7 @@ app.use(cors())
 const db = require('./Connection/Connection')
 
 const UserRouters = require('./Routers/UserRouters')
-app.use('/user', AdminRouters)
+app.use('/user', UserRouters)
 
 app.use('/Public/', express.static(__dirname + '/Public')) 
 
