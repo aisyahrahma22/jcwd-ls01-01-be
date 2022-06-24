@@ -10,5 +10,8 @@ Router.post('/register', UserController.register);
 Router.post('/login', UserController.login);
 Router.get('/getoldpassword', jwtVerify, UserController.getOldPassword);
 Router.post('/changepassword', jwtVerify, UserController.changePassword);
+Router.patch('/verification', jwtVerify,  UserController.verification);
+Router.post('/checkuserverify', jwtVerify, UserController.checkUserVerify);
+Router.post('/resend', jwtVerify, UserController.resend);
 
 module.exports = Router;
