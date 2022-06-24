@@ -303,13 +303,13 @@ resend: (req, res) => {
                             try {
                                 if(err1) throw err1
                                 
-                                fs.readFile('C:/My Projectjcwd-ls01-01-be/Public/Template/index.html', {
+                                fs.readFile('C:/My Project/jcwd-ls01-01-be/Public/Template/index.html', {
                                     encoding: 'utf-8'}, (err, file) => {
                                         if(err) throw err 
                                 
     
                                         const newTemplate = handlebars.compile(file)
-                                        const newTemplateResult = newTemplate({bebas: email, link:`http://localhost:3000/verification/${token}`})
+                                        const newTemplateResult = newTemplate({bebas: email, link:`http://localhost:3000/confirmation/${token}`})
     
                                         transporter.sendMail({
                                             from: 'apotakecare@mail.com',  
@@ -354,5 +354,78 @@ resend: (req, res) => {
             console.log(error)                
         }
     })
+},
+editProfileData: (req,res) => {
+  var id = req.dataToken.id
+  
+  var sql = `SELECT * from user where id = ${id};`;
+  db.query(sql, (err, results) => {
+      if(err) throw err;
+  
+      if(results.length > 0) {
+          const path = 'Public/users'; 
+          const upload = uploader(path, 'USER').fields([{ name: 'image'}]);
+
+          upload(req, res, (err) => {
+              if(err){
+                  return res.status(500).json({ message: 'Uploud Profile Image Failed !', error: err.message });
+              }
+
+              const { image } = req.files;
+              const imagePath = image ? path + '/' + image[0].filename : null;
+              const data = JSON.parse(req.body.data);
+  
+
+
+              try {
+                  if(imagePath) {
+                      data.profile_picture = imagePath;   
+                  }
+
+                  if(data.umur){
+                    let year = new Date().getFullYear()
+                    let usia = year - data.umur
+                    data.umur = usia
+                  }
+                  
+                  sql = `Update user set ? where id = ${id};`
+                  db.query(sql,data, (err1,results1) => {
+                      if(err1) {
+                          if(imagePath) {
+                              fs.unlinkSync('./Public' + imagePath);
+                          }
+                          return res.status(500).json({ message: "Server Error", error: err1.message });
+                      }
+
+                      if(imagePath) {
+                          fs.unlinkSync('' + results[0].profile_picture);
+                      }
+
+                      queryHasil = `SELECT * from user where id = ${id}`;
+                      db.query(queryHasil, id, (err4, results4) => {
+                          if(err4) {
+                              return res.status(500).json({ message: "Server Error", error: err.message });
+                          }
+                          
+                          return res.status(200).send(results4);
+                      })   
+                  })
+              }
+              catch(err){
+                  console.log(err.message)
+                  return res.status(500).json({ message: "Server Error", error: err.message });
+              }
+          })
+      }
+  })
+},
+getUsers: (req,res) => {
+  const id = req.dataToken.id 
+  var sql = `Select * from user where id = ${id};`;
+  db.query(sql, (err,result) => {
+      if(err) return res.status(500).send({ message: 'Error!', error: err})
+
+      return res.status(200).send(result)
+  })
 },
 };
