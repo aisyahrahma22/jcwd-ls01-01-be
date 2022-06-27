@@ -41,7 +41,6 @@ module.exports = {
         throw { message: 'Email Already Register!' };
       }
 
-      // Step4.3. Store ke Db
       let query2 = 'INSERT INTO user SET ?';
       const insertUser = await query(query2, data).catch((error) => {
         throw error;
