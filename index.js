@@ -8,8 +8,10 @@ app.use(cors());
 const db = require('./Connection/Connection');
 
 const UserRouters = require('./Routers/UserRouters');
+const ProductRouters = require('./Routers/ProductRouters');
 
 app.use('/user', UserRouters);
+app.use('/product', ProductRouters);
 
 app.use('/Public/', express.static(__dirname + '/Public'));
 
