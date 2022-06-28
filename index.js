@@ -9,7 +9,9 @@ const db = require('./Connection/Connection');
 
 const UserRouters = require('./Routers/UserRouters');
 const ProductRouters = require('./Routers/ProductRouters');
+const AdminRouters = require('./Routers/AdminRouters')
 
+app.use('/admin', AdminRouters)
 app.use('/user', UserRouters);
 app.use('/product', ProductRouters);
 
