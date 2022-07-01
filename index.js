@@ -9,9 +9,11 @@ const db = require('./Connection/Connection');
 
 const UserRouters = require('./Routers/UserRouters');
 const ProductRouters = require('./Routers/ProductRouters');
+const TransactionRouters = require('./Routers/TransactionRouters');
 
 app.use('/user', UserRouters);
 app.use('/product', ProductRouters);
+app.use('/transaction', TransactionRouters);
 
 app.use('/Public/', express.static(__dirname + '/Public'));
 
