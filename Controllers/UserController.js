@@ -41,7 +41,6 @@ module.exports = {
         throw { message: 'Email Already Register!' };
       }
 
-      // Step4.3. Store ke Db
       let query2 = 'INSERT INTO user SET ?';
       const insertUser = await query(query2, data).catch((error) => {
         throw error;
@@ -140,6 +139,7 @@ module.exports = {
                   message: 'Login Success',
                   token: token,
                   id: result[0].id,
+                  verified: result[0].verified
                 });
               } catch (error) {
                 console.log(error);
@@ -374,12 +374,15 @@ editProfileData: (req,res) => {
               const { image } = req.files;
               const imagePath = image ? path + '/' + image[0].filename : null;
               const data = JSON.parse(req.body.data);
+              console.log( 'ini imagePath',imagePath)
   
 
 
               try {
+                console.log('imagePath after try', imagePath)
+                console.log('results', results)
                   if(imagePath) {
-                      data.profile_picture = imagePath;   
+                    data.profile_picture = imagePath
                   }
 
                   if(data.umur){
@@ -390,19 +393,53 @@ editProfileData: (req,res) => {
                   
                   sql = `Update user set ? where id = ${id};`
                   db.query(sql,data, (err1,results1) => {
+                    console.log('ini results1',results1)
+                    console.log('ini results', results)
+                    console.log('ini err1', err1)
                       if(err1) {
+                        console.log('imagePath err1', imagePath)
                           if(imagePath) {
-                              fs.unlinkSync('./Public' + imagePath);
+                              fs.unlinkSync('./Public/users' + imagePath);
                           }
                           return res.status(500).json({ message: "Server Error", error: err1.message });
                       }
 
-                      if(imagePath) {
-                          fs.unlinkSync('' + results[0].profile_picture);
+                      console.log(' data.profile_picture',  data.profile_picture)
+                      console.log('resultf before results[0].profile_picture', results)
+                      console.log('results[0].profile_picture', results[0].profile_picture)
+                      console.log('imagePath bawha', imagePath)
+                      // kalo pp nya ga string kosong or null maka ada isinya, jadi harus di update 
+                      // tanpa menghapus foto di vs code jadi update aja nama filenya
+                      // tapi kalau ga ada alias null or string kosong, maka uploud foto ke db dan vs code
+                      if(results[0].profile_picture === '' || results[0].profile_picture === null ){
+                        if(imagePath === null){
+                          data.profile_picture = results[0].profile_picture
+                        }else{
+                          // results[0].profile_picture = data.profile_picture 
+                          data.profile_picture = imagePath
+                        }
+                       
+                      }else{
+                        if(!data.profile_picture){
+                          data.profile_picture = results[0].profile_picture
+                        }else{
+                          if(data.profile_picture !== results[0].profile_picture){
+                            fs.unlinkSync('' + results[0].profile_picture);
+                          }
+                        }
+                        
                       }
+
+                    
+
+                      // if(imagePath) {
+                      //     fs.unlinkSync('' + results[0].profile_picture);
+                      // }
 
                       queryHasil = `SELECT * from user where id = ${id}`;
                       db.query(queryHasil, id, (err4, results4) => {
+                        console.log('ini err4', err4)
+                        console.log('ini  results4',  results4)
                           if(err4) {
                               return res.status(500).json({ message: "Server Error", error: err.message });
                           }
