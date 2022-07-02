@@ -7,5 +7,6 @@ Router.get('/totalproductsnum', ProductController.getTotalProductsNum);
 Router.get('/productcards', ProductController.getProductCards);
 Router.get('/productdetail', ProductController.getProductDetail);
 Router.get('/relatedproducts', ProductController.getRelatedProducts);
+Router.get('/searchproducts', ProductController.searchProducts);
 
 module.exports = Router;

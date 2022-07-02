@@ -4,8 +4,44 @@ const query = util.promisify(db.query).bind(db);
 
 module.exports = {
     getTotalProductsNum: (req,res) => {
-        var query = `SELECT COUNT(*) as countProducts FROM produk;`
-        db.query(query, (err,result) => {
+        const category = req.query.category
+        let keluhan = req.query.keluhan
+        let hargaMin = req.query.hargamin
+        let hargaMax = req.query.hargamax
+        let jenisObat = req.query.jenisobat
+        let golonganObat = req.query.golonganobat
+        let search = req.query.search
+
+        var query1 = `SELECT COUNT(*) as countProducts FROM produk `
+
+        if(category == 'obat-obatan'){query1 += `WHERE KategoriObat_id = 1 `}
+        if(category == 'nutrisi'){query1 += `WHERE KategoriObat_id = 2 `}
+        if(category == 'herbal'){query1 += `WHERE KategoriObat_id = 3 `}
+        if(category == 'vitamin-suplemen'){query1 += `WHERE KategoriObat_id = 4 `}
+        if(category == 'alat-kesehatan'){query1 += `WHERE KategoriObat_id = 5 `}
+        if(category == 'perawatan-tubuh'){query1 += `WHERE KategoriObat_id = 6 `}
+        if(category == 'ibu-anak'){query1 += `WHERE KategoriObat_id = 7 `}
+            
+        if((category === ('semua-kategori' || '')) && (search || keluhan || hargaMin || hargaMax || jenisObat || golonganObat)){
+            query1 += `WHERE `
+        }
+        
+        if(search){
+            if (category !== ('semua-kategori' || '')){
+                query1 += `AND `
+            }
+            query1 += `nama_obat LIKE '%${search}%' `
+        }
+
+        if(keluhan){
+            if ((category !== ('semua-kategori' || '')) || search){
+                query1 += `AND `
+            }
+            keluhanString = keluhan.split('-').join(',')
+            query1 += `keluhan_id in (${keluhanString}) `
+        }
+
+        db.query(query1, (err,result) => {
             if(err) return res.status(500).send({ message: 'Error!', error: err})
             return res.status(200).send(result)
         })
@@ -15,39 +51,59 @@ module.exports = {
         try {
             const page = parseInt(req.query.page)
             const limit = parseInt(req.query.limit)
+            const category = req.query.category
+            let keluhan = req.query.keluhan
+            let hargaMin = req.query.hargamin
+            let hargaMax = req.query.hargamax
+            let jenisObat = req.query.jenisobat
+            let golonganObat = req.query.golonganobat
+            let search = req.query.search
             const sortBy = req.query.sortby
             const startIndex = (page - 1) * limit
             
-            const defaultQuery = `SELECT id, nama_obat AS namaObat,
+            let query1 = `SELECT id, nama_obat AS namaObat,
             butuh_resep AS butuhResep, harga, gambar, stok,
             Keluhan_id AS keluhanId,
             KategoriObat_id AS kategoriObatId,
             SatuanObat_id AS satuanObatId,
             GolonganObat_id AS golonganObatId
-            FROM produk`
+            FROM produk `
 
-            var query1 = ''
+            if(category == 'obat-obatan'){query1 += `WHERE KategoriObat_id = 1 `}
+            if(category == 'nutrisi'){query1 += `WHERE KategoriObat_id = 2 `}
+            if(category == 'herbal'){query1 += `WHERE KategoriObat_id = 3 `}
+            if(category == 'vitamin-suplemen'){query1 += `WHERE KategoriObat_id = 4 `}
+            if(category == 'alat-kesehatan'){query1 += `WHERE KategoriObat_id = 5 `}
+            if(category == 'perawatan-tubuh'){query1 += `WHERE KategoriObat_id = 6 `}
+            if(category == 'ibu-anak'){query1 += `WHERE KategoriObat_id = 7 `}
+            
+            if((category === ('semua-kategori' || '')) && (search || keluhan || hargaMin || hargaMax || jenisObat || golonganObat)){
+                query1 += `WHERE `
+            }
+           
+            if(search){
+                if (category !== ('semua-kategori' || '')){
+                    query1 += `AND `
+                }
+                query1 += `nama_obat LIKE '%${search}%' `
+            }
 
-            if(sortBy == 'AZ'){
-                query1 = `${defaultQuery}
-                ORDER BY namaObat ASC
-                LIMIT ${startIndex},${limit};`
+            if(keluhan){
+                if ((category !== ('semua-kategori' || '')) || search){
+                    query1 += `AND `
+                }
+                keluhanString = keluhan.split('-').join(',')
+                query1 += `keluhan_id in (${keluhanString}) `
             }
-            if(sortBy == 'ZA'){
-                query1 = `${defaultQuery}
-                ORDER BY namaObat DESC
-                LIMIT ${startIndex},${limit};`
-            }
-            if(sortBy == 'hargaTerendah'){
-                query1 = `${defaultQuery}
-                ORDER BY harga ASC
-                LIMIT ${startIndex},${limit};`
-            }
-            if(sortBy == 'hargaTertinggi'){
-                query1 = `${defaultQuery} 
-                ORDER BY harga DESC
-                LIMIT ${startIndex},${limit};`
-            }
+
+            if(sortBy == 'AZ'){query1 += `ORDER BY namaObat ASC `}
+            if(sortBy == 'ZA'){query1 += `ORDER BY namaObat DESC `}
+            if(sortBy == 'hargaTerendah'){query1 += `ORDER BY harga ASC `}
+            if(sortBy == 'hargaTertinggi'){query1 += `ORDER BY harga DESC `}
+            
+            query1 += `LIMIT ${startIndex},${limit};`
+
+
             const products = await query(query1)
 
             let query2 = `SELECT satuan_obat AS satuanObat FROM satuanobat WHERE id = ?`
@@ -143,6 +199,30 @@ module.exports = {
                 status: 500,
                 error: true,
                 message: error.message
+            })
+        }
+    },
+
+    searchProducts: async(req, res) => {
+        try {
+            let entry = req.query.entry
+
+            const query1 = `SELECT COUNT(*) AS total FROM produk WHERE nama_obat LIKE ?`
+            let total = await query(query1, ['%' + entry + '%'])
+
+            const query2 = `SELECT id, nama_obat AS namaObat FROM produk WHERE nama_obat LIKE ?`
+            let products1 = await query(query2, [entry + '%'])
+            
+            const query3 = `SELECT id, nama_obat AS namaObat FROM produk WHERE nama_obat LIKE ? AND nama_obat NOT LIKE ?`
+            let products2 = await query(query3, [('%' + entry + '%'), (entry + '%')])
+            
+            let products = [...products1, ...products2]
+
+            res.status(200).send({total: total, products: products})
+        } catch (error) {
+            res.status(500).send({
+                    error: true, 
+                    message: error.message
             })
         }
     }
