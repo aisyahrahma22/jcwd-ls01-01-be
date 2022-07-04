@@ -1,6 +1,9 @@
 const db = require('../Connection/Connection');
 const util = require('util');
 const query = util.promisify(db.query).bind(db);
+const transporter = require('../Helpers/Transporter');
+const { uploader } = require('../Helpers/Uploader');
+var fs = require('fs');
 
 module.exports = {
     getTotalProductsNum: (req,res) => {
@@ -111,16 +114,51 @@ module.exports = {
                     let satuan = await query(query2, products[i].satuanObatId)
                     products[i] = { ...products[i], satuanObat: satuan[0].satuanObat}
                 }
+      res.status(200).send(products);
+    } catch (error) {
+      res.status(500).send({
+        status: 500,
+        error: true,
+        message: error.message,
+      });
+    }
+  },
+  addResep: (req, res) => {
+    try {
+      const path = 'Public/resep';
+      const upload = uploader(path, 'RESEP').fields([{ name: 'image' }]);
+      const id = req.dataToken.id;
 
-            res.status(200).send(products)
-
-        } catch (error) {
-            res.status(500).send({
-                status: 500,
-                error: true,
-                message: error.message
-            })
+      upload(req, res, (err) => {
+        if (err) {
+          return res.status(500).json({ message: 'Uplous Resep failed !', error: err.message });
         }
+        const { image } = req.files;
+        const imagePath = image ? path + '/' + image[0].filename : null;
+
+        var sql = `INSERT INTO resep (gambar_resep, User_id) VALUES ('${imagePath}', '${id}');`;
+        db.query(sql, (err, results) => {
+          console.log('ini results', results);
+          console.log('ini err', err);
+          if (err) {
+            return res.status(500).json({ message: 'Server Error', error: err.message });
+          }
+
+          sql = `SELECT * from resep where User_id = ${id};`;
+          db.query(sql, id, (err2, results2) => {
+            console.log('ini results2', results2);
+            if (err2) {
+              return res.status(500).json({ message: 'Server Error', error: err.message });
+            }
+
+            return res.status(200).send(results2);
+          });
+        });
+      });
+    } catch (err) {
+      return res.status(500).json({ message: 'Server Error', error: err.message });
+    }
+  },
     },
 
     getProductDetail: async(req,res) => {
