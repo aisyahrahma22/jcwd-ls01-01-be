@@ -159,8 +159,7 @@ module.exports = {
       return res.status(500).json({ message: 'Server Error', error: err.message });
     }
   },
-    },
-
+    
     getProductDetail: async(req,res) => {
         try {
             const id = parseInt(req.query.id)
