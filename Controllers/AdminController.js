@@ -131,8 +131,7 @@ module.exports = {
                 const imagePath = gambar ? path + '/' + gambar[0].filename : null;
                 const data = JSON.parse(req.body.data);
                 data.gambar = imagePath;
-                data.admin_id = id
-               
+            
                 
                 var sql = 'INSERT INTO produk SET ?';
                 db.query(sql, data, (err, results) => {
@@ -143,7 +142,7 @@ module.exports = {
                     } 
                 
                     sql = `SELECT * from produk`;
-                    db.query(sql, id, (err, results) => {
+                    db.query(sql, (err, results) => {
                         if(err) {
                             return res.status(500).json({ message: "Server Error", error: err.message });
                         }
@@ -199,7 +198,7 @@ module.exports = {
                                     return res.status(500).json({ message: "Server Error", error: err.message });
                                 }
                                 
-                                return res.status(200).send(results4);
+                                return res.status(200).send({ message: "Update Product Success", result: results4 });
                             })   
                         })
                     }
@@ -237,7 +236,7 @@ module.exports = {
         var sql = `Select produk.*, produk.id as nomerObat, golonganobat.golongan_obat, satuanobat.satuan_obat from produk JOIN golonganobat ON produk.GolonganObat_id = golonganobat.id JOIN satuanobat ON produk.SatuanObat_id = satuanobat.id WHERE produk.id = ${produk_id}`
         db.query(sql, (err,result) => {
             if(err) return res.status(500).send({ message: 'Error!', error: err})
-
+            console.log(result)
             return res.status(200).json(result)
         })
     },
