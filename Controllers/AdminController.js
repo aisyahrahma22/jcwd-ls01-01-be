@@ -217,6 +217,10 @@ module.exports = {
         const limit = parseInt(req.query.limit)
         const startIndex = (page - 1) * limit
         const id = req.dataToken.id 
+        var sql = `Select produk.*, produk.id as nomerObat, golonganobat.golongan_obat, satuanobat.satuan_obat from produk JOIN golonganobat ON produk.GolonganObat_id = golonganobat.id JOIN satuanobat ON produk.SatuanObat_id = satuanobat.id ORDER BY produk.id LIMIT ${startIndex},${limit};`
+        db.query(sql, (err,result) => {
+            if(err) return res.status(500).send({ message: 'Error!', error: err})
+            var sql2 = 'SELECT COUNT(produk.id) as TotalData FROM produk;'
         var sql = `Select produk2.*, produk2.id as nomerObat, golonganobat.golongan_obat, satuanobat.satuan_obat from produk2 JOIN golonganobat ON produk2.GolonganObat_id = golonganobat.id JOIN satuanobat ON produk2.SatuanObat_id = satuanobat.id ORDER BY produk2.id LIMIT ${startIndex},${limit};`
         db.query(sql, (err,result) => {
             if(err) return res.status(500).send({ message: 'Error!', error: err})
@@ -249,6 +253,7 @@ module.exports = {
             const start = (page - 1) * limit
             const end = page * limit
 
+            let query1 = `Select produk.*, produk.id as nomerObat, golonganobat.golongan_obat, satuanobat.satuan_obat from produk JOIN golonganobat ON produk.GolonganObat_id = golonganobat.id JOIN satuanobat ON produk.SatuanObat_id = satuanobat.id ORDER BY produk.id LIMIT ${start},${limit};`
             let query1 = `Select produk.*, produk.id as nomerObat, golonganobat.golongan_obat, satuanobat.satuan_obat from produk JOIN golonganobat ON produk.GolonganObat_id = golonganobat.id JOIN satuanobat ON produk2.SatuanObat_id = satuanobat.id ORDER BY produk.id LIMIT ${start},${limit};`
             const findProduk = await query(query1, {
                 attributes: [['id', 'id'], ['nama_obat', 'nama_obat']],
@@ -257,7 +262,9 @@ module.exports = {
                 offset: start
             })
 
+            let query2 = 'SELECT COUNT(produk.id) as TotalData FROM produk;'
             let query2 = 'SELECT COUNT(produk.id) as TotalData FROM produk2;'
+
             const countProduk = await query(query2)
             console.log('countProduk', countProduk[0].TotalData)
 
