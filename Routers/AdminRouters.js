@@ -9,5 +9,9 @@ const AdminController = require('../Controllers/AdminController')
 const jwtVerify = require('../Middleware/JWT')
 
 Router.post('/loginadmin', AdminController.login) 
+Router.get("/getprodukID",  jwtVerify, AdminController.getUnikIDProduct);
+Router.get("/paginate",  jwtVerify, AdminController.pagination);
+Router.post('/addproduct', jwtVerify, AdminController.addProduct) 
+Router.patch('/editproduct', jwtVerify, AdminController.editProduct)
 
 module.exports = Router
