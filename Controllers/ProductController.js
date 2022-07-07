@@ -262,5 +262,43 @@ module.exports = {
                     message: error.message
             })
         }
-    }
+    },
+
+    diskon: (req,res) => { 
+        var sql = `Select produk.harga from produk`
+        db.query(sql, (err,result) => {
+            if(err) return res.status(500).send({ message: 'Error!', error: err})
+            var newArray = []
+            for (let i = 0; i < result.length; i++) {
+                let hargaDiskon = result[i].harga * (10/100)
+                let newHarga = result[i].harga - hargaDiskon 
+                newArray.push(newHarga)
+            }
+            res.status(200).send({
+                diskon : newArray
+            })
+
+        })
+    },
+
+    getHomeProduk: (req,res) => { 
+        var sql = `SELECT *,  satuanobat.satuan_obat FROM produk JOIN satuanobat ON produk.SatuanObat_id = satuanobat.id LIMIT 4;`
+        db.query(sql, (err,result) => {
+            if(err) return res.status(500).send({ message: 'Error!', error: err})
+
+            var sql2 = `Select *,  satuanobat.satuan_obat from produk JOIN satuanobat ON produk.SatuanObat_id = satuanobat.id ORDER BY produk.id DESC LIMIT 0, 5;`
+            db.query(sql2, (err2,result2) => {
+                if(err2) return res.status(500).send({ message: 'Error!', error: err2})
+            
+                res.status(200).send({
+                    produkDiskon : result,
+                    produkTerbaru: result2
+                })
+    
+            })
+
+        })
+    },
+    
+
 };
