@@ -245,6 +245,7 @@ module.exports = {
         })
     },
 
+
     pagination: async(req, res) => {
         try {
             const page = parseInt(req.query.page)
