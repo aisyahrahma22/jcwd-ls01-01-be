@@ -610,4 +610,18 @@ module.exports = {
       }
     });
   },
+  getAddress: async(req,res) => {
+    try {
+        const id = req.dataToken.id 
+        const query1 = `SELECT * FROM alamat WHERE User_id = ?`
+        let addresses = await query(query1, id)
+        res.status(200).send(addresses)
+    } catch (error) {
+        res.status(500).send({
+            status: 500,
+            error: true,
+            message: error.message
+        })
+    }
+  },
 };

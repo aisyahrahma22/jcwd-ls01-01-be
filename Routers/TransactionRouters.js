@@ -7,5 +7,9 @@ Router.post('/addtocart', jwtVerify, TransactionController.addToCart);
 Router.get('/getcart', jwtVerify, TransactionController.getCart)
 Router.patch('/editquantity', jwtVerify, TransactionController.editQuantity)
 Router.patch('/editselected', jwtVerify, TransactionController.editSelected)
+Router.patch('/selectall', jwtVerify, TransactionController.selectAll)
+Router.delete('/deleteproduct', jwtVerify, TransactionController.deleteProduct)
+Router.get('/getcheckoutdata', jwtVerify, TransactionController.getCheckoutData)
+Router.get('/getpaymentmethod', jwtVerify, TransactionController.getPaymentMethod)
 
 module.exports = Router;

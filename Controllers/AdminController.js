@@ -271,17 +271,6 @@ module.exports = {
         })
     },
 
-    getUnikIDProduct: (req,res) => {
-        var produk_id = parseInt(req.query.id);
-        const id = req.dataToken.id 
-        var sql = `Select produk.*, produk.id as nomerObat, golonganobat.golongan_obat, satuanobat.satuan_obat from produk JOIN golonganobat ON produk.GolonganObat_id = golonganobat.id JOIN satuanobat ON produk.SatuanObat_id = satuanobat.id WHERE produk.id = ${produk_id}`
-        db.query(sql, (err,result) => {
-            if(err) return res.status(500).send({ message: 'Error!', error: err})
-            console.log(result)
-            return res.status(200).json(result)
-        })
-    },
-
     pagination: async(req, res) => {
         try {
             const page = parseInt(req.query.page)
@@ -301,28 +290,6 @@ module.exports = {
             const countProduk = await query(query2)
             console.log('countProduk', countProduk[0].TotalData)
 
-            let countFiltered = parseInt(countProduk[0].TotalData)
-            let pagination = {}
-            pagination.totalRow = countProduk
-            pagination.totalPage = Math.ceil(countFiltered/limit)
-            console.log('pagination.totalPage', pagination.totalPage)
-
-            if (end < countFiltered){
-                pagination.next = {
-                    page : pagination.totalPage - page,
-                    limit
-                }
-            }
-
-            if (start > 0){
-                pagination.prev = {
-                    page : page - 1,
-                    limit
-                }
-            }
-
-
-
             if(findProduk.length == 0){
                 throw { message: 'Produk Not Found' }
             }else {
@@ -341,9 +308,5 @@ module.exports = {
             })
         }
     }, 
-   
-
-   
-    
 }
 
