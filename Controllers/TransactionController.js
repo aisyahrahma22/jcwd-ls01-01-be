@@ -8,7 +8,6 @@ module.exports = {
             const userId = req.dataToken.id 
             const productId = req.body.productId
             const quantity = req.body.quantity
-            console.log(userId, productId, quantity)
 
             const query1 = `SELECT COUNT(*) produk_id FROM keranjang WHERE user_id = ? AND produk_id = ?;`
             const productExists = await query(query1, [userId, productId])
@@ -93,5 +92,72 @@ module.exports = {
             if(err) return res.status(500).send({ message: 'Error!', error: err})
             return res.status(200).send({error: false, message:'Success!'})
         })   
-    }
+    },
+
+    selectAll: (req,res) => {
+        const userId = req.dataToken.id 
+        const productsId = req.body.productsId
+        const selected = req.body.checkMark
+
+        const query1 = `UPDATE keranjang SET selected = ? WHERE User_id = ? AND Produk_id = ?;`
+        for(let i = 0; i < productsId.length; i++){
+            db.query(query1, [selected, userId, productsId[i]], (err, result) => {
+                if(err) return res.status(500).send({ message: 'Error!', error: err})
+            })   
+        }
+        return res.status(200).send({error: false, message:'Success!'})
+    },
+
+    deleteProduct: (req,res) => {
+        const userId = req.dataToken.id 
+        const productId = req.query.produkId
+
+        const query1 = `DELETE FROM keranjang WHERE User_id = ? AND Produk_id = ?;`
+        db.query(query1, [userId, productId], (err, result) => {
+            if(err) return res.status(500).send({ message: 'Error!', error: err})
+            return res.status(200).send({error: false, message:'Success!'})
+        })   
+    },
+
+    getCheckoutData: async(req,res) => {
+        try {
+            const id = req.dataToken.id 
+            
+            const query1 = `SELECT id, produk_id AS produkId, quantity, selected
+            FROM keranjang WHERE user_id = ? AND selected = 1`
+            let products = await query(query1, id)
+
+            const query2 = `SELECT nama_obat AS namaObat, satuanObat_id AS satuanObatId,
+            harga, gambar, berat FROM produk WHERE id = ?`
+            for (let i = 0; i < products.length; i++) {
+                let detail = await query(query2, products[i].produkId)
+                products[i] = { ...products[i], ...detail[0]}
+            }
+            
+            const query3 = `SELECT * from alamat WHERE user_id = ?`
+            let alamat = await query(query3, id)
+
+            res.status(200).send({products, alamat})
+        } catch (error) {
+            res.status(500).send({
+                status: 500,
+                error: true,
+                message: error.message
+            })
+        }
+    },
+
+    getPaymentMethod: async(req,res) => {
+        try {
+            const query1 = `SELECT * FROM metodepembayaran`
+            let payment = await query(query1)
+            res.status(200).send(payment)
+        } catch (error) {
+            res.status(500).send({
+                status: 500,
+                error: true,
+                message: error.message
+            })
+        }
+    },
 }

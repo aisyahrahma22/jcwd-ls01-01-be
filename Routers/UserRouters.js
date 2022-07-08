@@ -15,5 +15,6 @@ Router.post('/checkuserverify', jwtVerify, UserController.checkUserVerify);
 Router.post('/resend', jwtVerify, UserController.resend);
 Router.patch('/editprofiledata',  jwtVerify, UserController.editProfileData);
 Router.get('/datauser', jwtVerify, UserController.getUsers);
+Router.get('/getaddress', jwtVerify, UserController.getAddress)
 
 module.exports = Router;

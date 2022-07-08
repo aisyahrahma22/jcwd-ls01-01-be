@@ -38,7 +38,7 @@ module.exports = {
                 query1 += `AND `
             }
             keluhanString = keluhan.split('-').join(',')
-            query1 += `keluhan_id in (${keluhanString}) `
+            query1 += `keluhan_id IN (${keluhanString}) `
         }
 
         db.query(query1, (err,result) => {
@@ -93,7 +93,7 @@ module.exports = {
                     query1 += `AND `
                 }
                 keluhanString = keluhan.split('-').join(',')
-                query1 += `keluhan_id in (${keluhanString}) `
+                query1 += `keluhan_id IN (${keluhanString}) `
             }
 
             if(sortBy == 'AZ'){query1 += `ORDER BY namaObat ASC `}
@@ -184,7 +184,6 @@ module.exports = {
                 const moreProducts = await query(query2, [golonganObatId, id])
                 products = [...products, ...moreProducts]
             }
-            console.log(products)
            
             const query3 = `SELECT satuan_obat AS satuanObat FROM satuanobat WHERE id = ?`
             for (let i = 0; i < products.length; i++) {
