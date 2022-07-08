@@ -134,8 +134,14 @@ module.exports = {
                 products[i] = { ...products[i], ...detail[0]}
             }
             
-            const query3 = `SELECT * from alamat WHERE user_id = ?`
-            let alamat = await query(query3, id)
+            const query3 = `SELECT satuan_obat AS satuanObat FROM satuanobat WHERE id = ?`
+            for (let i = 0; i < products.length; i++) {
+                let satuan = await query(query3, products[i].satuanObatId)
+                products[i] = { ...products[i], satuanObat: satuan[0].satuanObat}
+            }
+
+            const query4 = `SELECT * from alamat WHERE user_id = ?`
+            let alamat = await query(query4, id)
 
             res.status(200).send({products, alamat})
         } catch (error) {
