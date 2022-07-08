@@ -6,114 +6,149 @@ const { uploader } = require('../Helpers/Uploader');
 var fs = require('fs');
 
 module.exports = {
-    getTotalProductsNum: (req,res) => {
-        const category = req.query.category
-        let keluhan = req.query.keluhan
-        let hargaMin = req.query.hargamin
-        let hargaMax = req.query.hargamax
-        let jenisObat = req.query.jenisobat
-        let golonganObat = req.query.golonganobat
-        let search = req.query.search
+  getTotalProductsNum: (req, res) => {
+    const category = req.query.category;
+    let keluhan = req.query.keluhan;
+    let hargaMin = req.query.hargamin;
+    let hargaMax = req.query.hargamax;
+    let jenisObat = req.query.jenisobat;
+    let golonganObat = req.query.golonganobat;
+    let search = req.query.search;
 
-        var query1 = `SELECT COUNT(*) as countProducts FROM produk `
+    var query1 = `SELECT COUNT(*) as countProducts FROM produk `;
 
-        if(category == 'obat-obatan'){query1 += `WHERE KategoriObat_id = 1 `}
-        if(category == 'nutrisi'){query1 += `WHERE KategoriObat_id = 2 `}
-        if(category == 'herbal'){query1 += `WHERE KategoriObat_id = 3 `}
-        if(category == 'vitamin-suplemen'){query1 += `WHERE KategoriObat_id = 4 `}
-        if(category == 'alat-kesehatan'){query1 += `WHERE KategoriObat_id = 5 `}
-        if(category == 'perawatan-tubuh'){query1 += `WHERE KategoriObat_id = 6 `}
-        if(category == 'ibu-anak'){query1 += `WHERE KategoriObat_id = 7 `}
-            
-        if((category === ('semua-kategori' || '')) && (search || keluhan || hargaMin || hargaMax || jenisObat || golonganObat)){
-            query1 += `WHERE `
-        }
-        
-        if(search){
-            if (category !== ('semua-kategori' || '')){
-                query1 += `AND `
-            }
-            query1 += `nama_obat LIKE '%${search}%' `
-        }
+    if (category == 'obat-obatan') {
+      query1 += `WHERE KategoriObat_id = 1 `;
+    }
+    if (category == 'nutrisi') {
+      query1 += `WHERE KategoriObat_id = 2 `;
+    }
+    if (category == 'herbal') {
+      query1 += `WHERE KategoriObat_id = 3 `;
+    }
+    if (category == 'vitamin-suplemen') {
+      query1 += `WHERE KategoriObat_id = 4 `;
+    }
+    if (category == 'alat-kesehatan') {
+      query1 += `WHERE KategoriObat_id = 5 `;
+    }
+    if (category == 'perawatan-tubuh') {
+      query1 += `WHERE KategoriObat_id = 6 `;
+    }
+    if (category == 'ibu-anak') {
+      query1 += `WHERE KategoriObat_id = 7 `;
+    }
 
-        if(keluhan){
-            if ((category !== ('semua-kategori' || '')) || search){
-                query1 += `AND `
-            }
-            keluhanString = keluhan.split('-').join(',')
-            query1 += `keluhan_id in (${keluhanString}) `
-        }
+    if (category === ('semua-kategori' || '') && (search || keluhan || hargaMin || hargaMax || jenisObat || golonganObat)) {
+      query1 += `WHERE `;
+    }
 
-        db.query(query1, (err,result) => {
-            if(err) return res.status(500).send({ message: 'Error!', error: err})
-            return res.status(200).send(result)
-        })
-    },
+    if (search) {
+      if (category !== ('semua-kategori' || '')) {
+        query1 += `AND `;
+      }
+      query1 += `nama_obat LIKE '%${search}%' `;
+    }
 
-    getProductCards: async(req,res) => {
-        try {
-            const page = parseInt(req.query.page)
-            const limit = parseInt(req.query.limit)
-            const category = req.query.category
-            let keluhan = req.query.keluhan
-            let hargaMin = req.query.hargamin
-            let hargaMax = req.query.hargamax
-            let jenisObat = req.query.jenisobat
-            let golonganObat = req.query.golonganobat
-            let search = req.query.search
-            const sortBy = req.query.sortby
-            const startIndex = (page - 1) * limit
-            
-            let query1 = `SELECT id, nama_obat AS namaObat,
+    if (keluhan) {
+      if (category !== ('semua-kategori' || '') || search) {
+        query1 += `AND `;
+      }
+      keluhanString = keluhan.split('-').join(',');
+      query1 += `keluhan_id in (${keluhanString}) `;
+    }
+
+    db.query(query1, (err, result) => {
+      if (err) return res.status(500).send({ message: 'Error!', error: err });
+      return res.status(200).send(result);
+    });
+  },
+
+  getProductCards: async (req, res) => {
+    try {
+      const page = parseInt(req.query.page);
+      const limit = parseInt(req.query.limit);
+      const category = req.query.category;
+      let keluhan = req.query.keluhan;
+      let hargaMin = req.query.hargamin;
+      let hargaMax = req.query.hargamax;
+      let jenisObat = req.query.jenisobat;
+      let golonganObat = req.query.golonganobat;
+      let search = req.query.search;
+      const sortBy = req.query.sortby;
+      const startIndex = (page - 1) * limit;
+
+      let query1 = `SELECT id, nama_obat AS namaObat,
             butuh_resep AS butuhResep, harga, gambar, stok,
             Keluhan_id AS keluhanId,
             KategoriObat_id AS kategoriObatId,
             SatuanObat_id AS satuanObatId,
             GolonganObat_id AS golonganObatId
-            FROM produk `
+            FROM produk `;
 
-            if(category == 'obat-obatan'){query1 += `WHERE KategoriObat_id = 1 `}
-            if(category == 'nutrisi'){query1 += `WHERE KategoriObat_id = 2 `}
-            if(category == 'herbal'){query1 += `WHERE KategoriObat_id = 3 `}
-            if(category == 'vitamin-suplemen'){query1 += `WHERE KategoriObat_id = 4 `}
-            if(category == 'alat-kesehatan'){query1 += `WHERE KategoriObat_id = 5 `}
-            if(category == 'perawatan-tubuh'){query1 += `WHERE KategoriObat_id = 6 `}
-            if(category == 'ibu-anak'){query1 += `WHERE KategoriObat_id = 7 `}
-            
-            if((category === ('semua-kategori' || '')) && (search || keluhan || hargaMin || hargaMax || jenisObat || golonganObat)){
-                query1 += `WHERE `
-            }
-           
-            if(search){
-                if (category !== ('semua-kategori' || '')){
-                    query1 += `AND `
-                }
-                query1 += `nama_obat LIKE '%${search}%' `
-            }
+      if (category == 'obat-obatan') {
+        query1 += `WHERE KategoriObat_id = 1 `;
+      }
+      if (category == 'nutrisi') {
+        query1 += `WHERE KategoriObat_id = 2 `;
+      }
+      if (category == 'herbal') {
+        query1 += `WHERE KategoriObat_id = 3 `;
+      }
+      if (category == 'vitamin-suplemen') {
+        query1 += `WHERE KategoriObat_id = 4 `;
+      }
+      if (category == 'alat-kesehatan') {
+        query1 += `WHERE KategoriObat_id = 5 `;
+      }
+      if (category == 'perawatan-tubuh') {
+        query1 += `WHERE KategoriObat_id = 6 `;
+      }
+      if (category == 'ibu-anak') {
+        query1 += `WHERE KategoriObat_id = 7 `;
+      }
 
-            if(keluhan){
-                if ((category !== ('semua-kategori' || '')) || search){
-                    query1 += `AND `
-                }
-                keluhanString = keluhan.split('-').join(',')
-                query1 += `keluhan_id in (${keluhanString}) `
-            }
+      if (category === ('semua-kategori' || '') && (search || keluhan || hargaMin || hargaMax || jenisObat || golonganObat)) {
+        query1 += `WHERE `;
+      }
 
-            if(sortBy == 'AZ'){query1 += `ORDER BY namaObat ASC `}
-            if(sortBy == 'ZA'){query1 += `ORDER BY namaObat DESC `}
-            if(sortBy == 'hargaTerendah'){query1 += `ORDER BY harga ASC `}
-            if(sortBy == 'hargaTertinggi'){query1 += `ORDER BY harga DESC `}
-            
-            query1 += `LIMIT ${startIndex},${limit};`
+      if (search) {
+        if (category !== ('semua-kategori' || '')) {
+          query1 += `AND `;
+        }
+        query1 += `nama_obat LIKE '%${search}%' `;
+      }
 
+      if (keluhan) {
+        if (category !== ('semua-kategori' || '') || search) {
+          query1 += `AND `;
+        }
+        keluhanString = keluhan.split('-').join(',');
+        query1 += `keluhan_id in (${keluhanString}) `;
+      }
 
-            const products = await query(query1)
+      if (sortBy == 'AZ') {
+        query1 += `ORDER BY namaObat ASC `;
+      }
+      if (sortBy == 'ZA') {
+        query1 += `ORDER BY namaObat DESC `;
+      }
+      if (sortBy == 'hargaTerendah') {
+        query1 += `ORDER BY harga ASC `;
+      }
+      if (sortBy == 'hargaTertinggi') {
+        query1 += `ORDER BY harga DESC `;
+      }
 
-            let query2 = `SELECT satuan_obat AS satuanObat FROM satuanobat WHERE id = ?`
-                for (let i = 0; i < products.length; i++) {
-                    let satuan = await query(query2, products[i].satuanObatId)
-                    products[i] = { ...products[i], satuanObat: satuan[0].satuanObat}
-                }
+      query1 += `LIMIT ${startIndex},${limit};`;
+
+      const products = await query(query1);
+
+      let query2 = `SELECT satuan_obat AS satuanObat FROM satuanobat WHERE id = ?`;
+      for (let i = 0; i < products.length; i++) {
+        let satuan = await query(query2, products[i].satuanObatId);
+        products[i] = { ...products[i], satuanObat: satuan[0].satuanObat };
+      }
       res.status(200).send(products);
     } catch (error) {
       res.status(500).send({
@@ -123,6 +158,7 @@ module.exports = {
       });
     }
   },
+
   addResep: (req, res) => {
     try {
       const path = 'Public/resep';
@@ -159,6 +195,7 @@ module.exports = {
       return res.status(500).json({ message: 'Server Error', error: err.message });
     }
   },
+
     getProductDetail: async(req,res) => {
         try {
             const id = parseInt(req.query.id)
@@ -167,55 +204,55 @@ module.exports = {
             indikasi, komposisi, kemasan, cara_penyimpanan AS caraPenyimpanan,
             principal, nie, cara_pakai AS caraPakai, peringatan, Keluhan_id AS keluhanId,
             KategoriObat_id AS kategoriObatId, SatuanObat_id AS satuanObatId, GolonganObat_id AS golonganObatId
-            FROM produk WHERE id = ?`
+            FROM produk WHERE id = ?`;
 
-            let productArr = await query(query1, id)
-            let product = productArr[0]
+      let productArr = await query(query1, id);
+      let product = productArr[0];
 
-            let query2 = `SELECT satuan_obat AS satuanObat FROM satuanobat WHERE id = ?`
-            let satuan = await query(query2, product.satuanObatId)
-            product = { ...product, satuanObat: satuan[0].satuanObat}
+      let query2 = `SELECT satuan_obat AS satuanObat FROM satuanobat WHERE id = ?`;
+      let satuan = await query(query2, product.satuanObatId);
+      product = { ...product, satuanObat: satuan[0].satuanObat };
 
-            let query3 = `SELECT golongan_obat AS golonganObat FROM golonganobat WHERE id = ?`
-            let golongan = await query(query3, product.golonganObatId)
-            product = { ...product, golonganObat: golongan[0].golonganObat}
+      let query3 = `SELECT golongan_obat AS golonganObat FROM golonganobat WHERE id = ?`;
+      let golongan = await query(query3, product.golonganObatId);
+      product = { ...product, golonganObat: golongan[0].golonganObat };
 
-            let query4 = `SELECT kategori_obat AS kategoriObat FROM kategoriobat WHERE id = ?`
-            let kategori = await query(query4, product.kategoriObatId)
-            product = { ...product, kategoriObat: kategori[0].kategoriObat}
+      let query4 = `SELECT kategori_obat AS kategoriObat FROM kategoriobat WHERE id = ?`;
+      let kategori = await query(query4, product.kategoriObatId);
+      product = { ...product, kategoriObat: kategori[0].kategoriObat };
 
-            res.status(200).send(product)
+      res.status(200).send(product);
+    } catch (error) {
+      res.status(500).send({
+        status: 500,
+        error: true,
+        message: error.message,
+      });
+    }
+  },
 
-        } catch (error) {
-            res.status(500).send({
-                status: 500,
-                error: true,
-                message: error.message
-            })
-        }
-    },
+  getRelatedProducts: async (req, res) => {
+    try {
+      const id = parseInt(req.query.id);
+      const keluhanId = parseInt(req.query.keluhanid);
+      const golonganObatId = parseInt(req.query.golonganobatid);
 
-    getRelatedProducts: async(req,res) => {
-        try {
-            const id = parseInt(req.query.id)
-            const keluhanId = parseInt(req.query.keluhanid)
-            const golonganObatId = parseInt(req.query.golonganobatid)
-            
-            const query1 = `SELECT id, nama_obat AS namaObat,
+      const query1 = `SELECT id, nama_obat AS namaObat,
             butuh_resep AS butuhResep, harga, gambar, stok,
             SatuanObat_id AS satuanObatId
             FROM produk WHERE keluhan_id = ? 
-            AND NOT id = ? LIMIT 0,5`
+            AND NOT id = ? LIMIT 0,5`;
 
-            let products = await query(query1, [keluhanId, id])
+      let products = await query(query1, [keluhanId, id]);
 
-            if(products.length < 5){
-                const limit = 5 - products.length
-                const query2 = `SELECT id, nama_obat AS namaObat,
+      if (products.length < 5) {
+        const limit = 5 - products.length;
+        const query2 = `SELECT id, nama_obat AS namaObat,
                 butuh_resep AS butuhResep, harga, gambar, stok,
                 SatuanObat_id AS satuanObatId
                 FROM produk WHERE golonganobat_id = ? 
-                AND NOT id = ? LIMIT 0,${limit}`
+                AND NOT id = ? LIMIT 0,${limit}`;
+
 
                 const moreProducts = await query(query2, [golonganObatId, id])
                 products = [...products, ...moreProducts]
@@ -298,6 +335,5 @@ module.exports = {
 
         })
     },
-    
-
+   
 };
