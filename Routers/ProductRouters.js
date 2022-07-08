@@ -10,5 +10,7 @@ Router.post('/uploadresep', jwtVerify, ProductController.addResep);
 Router.get('/productdetail', ProductController.getProductDetail);
 Router.get('/relatedproducts', ProductController.getRelatedProducts);
 Router.get('/searchproducts', ProductController.searchProducts);
+Router.get('/diskon', ProductController.diskon);
+Router.get('/homeproduk', ProductController.getHomeProduk);
 
 module.exports = Router;

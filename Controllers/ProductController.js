@@ -196,11 +196,11 @@ module.exports = {
     }
   },
 
-  getProductDetail: async (req, res) => {
-    try {
-      const id = parseInt(req.query.id);
-
-      let query1 = `SELECT id, nama_obat AS namaObat, butuh_resep AS butuhResep, harga, gambar, stok,
+    getProductDetail: async(req,res) => {
+        try {
+            const id = parseInt(req.query.id)
+            
+            let query1 = `SELECT id, nama_obat AS namaObat, butuh_resep AS butuhResep, harga, gambar, stok,
             indikasi, komposisi, kemasan, cara_penyimpanan AS caraPenyimpanan,
             principal, nie, cara_pakai AS caraPakai, peringatan, Keluhan_id AS keluhanId,
             KategoriObat_id AS kategoriObatId, SatuanObat_id AS satuanObatId, GolonganObat_id AS golonganObatId
@@ -253,48 +253,87 @@ module.exports = {
                 FROM produk WHERE golonganobat_id = ? 
                 AND NOT id = ? LIMIT 0,${limit}`;
 
-        const moreProducts = await query(query2, [golonganObatId, id]);
-        products = [...products, ...moreProducts];
-      }
-      console.log(products);
 
-      const query3 = `SELECT satuan_obat AS satuanObat FROM satuanobat WHERE id = ?`;
-      for (let i = 0; i < products.length; i++) {
-        let satuan = await query(query3, products[i].satuanObatId);
-        products[i] = { ...products[i], satuanObat: satuan[0].satuanObat };
-      }
+                const moreProducts = await query(query2, [golonganObatId, id])
+                products = [...products, ...moreProducts]
+            }
+            console.log(products)
+           
+            const query3 = `SELECT satuan_obat AS satuanObat FROM satuanobat WHERE id = ?`
+            for (let i = 0; i < products.length; i++) {
+                let satuan = await query(query3, products[i].satuanObatId)
+                products[i] = { ...products[i], satuanObat: satuan[0].satuanObat}
+            }
+            
+            res.status(200).send(products)
 
-      res.status(200).send(products);
-    } catch (error) {
-      res.status(500).send({
-        status: 500,
-        error: true,
-        message: error.message,
-      });
-    }
-  },
+        } catch (error) {
+            res.status(500).send({
+                status: 500,
+                error: true,
+                message: error.message
+            })
+        }
+    },
 
-  searchProducts: async (req, res) => {
-    try {
-      let entry = req.query.entry;
+    searchProducts: async(req, res) => {
+        try {
+            let entry = req.query.entry
 
-      const query1 = `SELECT COUNT(*) AS total FROM produk WHERE nama_obat LIKE ?`;
-      let total = await query(query1, ['%' + entry + '%']);
+            const query1 = `SELECT COUNT(*) AS total FROM produk WHERE nama_obat LIKE ?`
+            let total = await query(query1, ['%' + entry + '%'])
 
-      const query2 = `SELECT id, nama_obat AS namaObat FROM produk WHERE nama_obat LIKE ?`;
-      let products1 = await query(query2, [entry + '%']);
+            const query2 = `SELECT id, nama_obat AS namaObat FROM produk WHERE nama_obat LIKE ?`
+            let products1 = await query(query2, [entry + '%'])
+            
+            const query3 = `SELECT id, nama_obat AS namaObat FROM produk WHERE nama_obat LIKE ? AND nama_obat NOT LIKE ?`
+            let products2 = await query(query3, [('%' + entry + '%'), (entry + '%')])
+            
+            let products = [...products1, ...products2]
 
-      const query3 = `SELECT id, nama_obat AS namaObat FROM produk WHERE nama_obat LIKE ? AND nama_obat NOT LIKE ?`;
-      let products2 = await query(query3, ['%' + entry + '%', entry + '%']);
+            res.status(200).send({total: total, products: products})
+        } catch (error) {
+            res.status(500).send({
+                    error: true, 
+                    message: error.message
+            })
+        }
+    },
 
-      let products = [...products1, ...products2];
+    diskon: (req,res) => { 
+        var sql = `Select produk.harga from produk`
+        db.query(sql, (err,result) => {
+            if(err) return res.status(500).send({ message: 'Error!', error: err})
+            var newArray = []
+            for (let i = 0; i < result.length; i++) {
+                let hargaDiskon = result[i].harga * (10/100)
+                let newHarga = result[i].harga - hargaDiskon 
+                newArray.push(newHarga)
+            }
+            res.status(200).send({
+                diskon : newArray
+            })
 
-      res.status(200).send({ total: total, products: products });
-    } catch (error) {
-      res.status(500).send({
-        error: true,
-        message: error.message,
-      });
-    }
-  },
+        })
+    },
+
+    getHomeProduk: (req,res) => { 
+        var sql = `SELECT *,  satuanobat.satuan_obat FROM produk JOIN satuanobat ON produk.SatuanObat_id = satuanobat.id LIMIT 4;`
+        db.query(sql, (err,result) => {
+            if(err) return res.status(500).send({ message: 'Error!', error: err})
+
+            var sql2 = `Select *,  satuanobat.satuan_obat from produk JOIN satuanobat ON produk.SatuanObat_id = satuanobat.id ORDER BY produk.id DESC LIMIT 0, 5;`
+            db.query(sql2, (err2,result2) => {
+                if(err2) return res.status(500).send({ message: 'Error!', error: err2})
+            
+                res.status(200).send({
+                    produkDiskon : result,
+                    produkTerbaru: result2
+                })
+    
+            })
+
+        })
+    },
+   
 };
