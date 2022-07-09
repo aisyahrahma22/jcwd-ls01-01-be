@@ -1,121 +1,162 @@
 const db = require('./../Connection/Connection');
-const util = require('util')
-const query = util.promisify(db.query).bind(db)
-const { uploader } = require('../Helpers/Uploader')
+const util = require('util');
+const query = util.promisify(db.query).bind(db);
+const { uploader } = require('../Helpers/Uploader');
 
 // Import Validator
-const validator = require('validator')
+const validator = require('validator');
 
-// Import Crypto 
-const crypto = require('crypto')
+// Import Crypto
+const crypto = require('crypto');
 
 // Import Transporter Nodemailer
-const transporter = require('./../Helpers/Transporter')
+const transporter = require('./../Helpers/Transporter');
 
-const fs = require('fs')
-const handlebars = require('handlebars')
+const fs = require('fs');
+const handlebars = require('handlebars');
 
 // Import JWT Token
-const jwt = require('jsonwebtoken')
-
+const jwt = require('jsonwebtoken');
+const { assign } = require('nodemailer/lib/shared');
 
 module.exports = {
-    login: (req, res) => {
-        try {
-            const data = req.body 
+  login: (req, res) => {
+    try {
+      const data = req.body;
 
-            if(!data.usernameOrEmail || !data.password) throw { message: 'Data incomplete!' }
+      if (!data.usernameOrEmail || !data.password) throw { message: 'Data incomplete!' };
 
-            if(data.usernameOrEmail.includes('@')) {
-            db.query('SELECT * FROM admin WHERE email = ?', [data.usernameOrEmail], (err, result) => {
-                try {
-                    if(err) throw error
+      if (data.usernameOrEmail.includes('@')) {
+        db.query('SELECT * FROM admin WHERE email = ?', [data.usernameOrEmail], (err, result) => {
+          try {
+            if (err) throw error;
 
-                    if(result.length === 1){
-                        if (data.password == result[0].password) {
-                            jwt.sign({id: result[0].id}, '123abc', (err, token) => {
-                                try {
-                                    if(err) throw err
+            if (result.length === 1) {
+              if (data.password == result[0].password) {
+                jwt.sign({ id: result[0].id }, '123abc', (err, token) => {
+                  try {
+                    if (err) throw err;
 
-                                    console.log('ini token with email', token)
-                                    res.status(200).json({
-                                        token: token,
-                                        id: result[0].id
-                                    })
-                                } catch (error) {
-                                    res.status(500).send({
-                                        error: true, 
-                                        message: error.message
-                                    })
-                                }
-                            })
-                        } else {
-                            res.status(400).send({
-                                error: true, 
-                                message: "Incorrect password",
-                            });
-                          }
-                    }else{
-                        res.status(400).send({
-                            error: true, 
-                            message: 'Account not found'
-                        })
-                    }
-                } catch (error) {
+                    console.log('ini token with email', token);
+                    res.status(200).json({
+                      token: token,
+                      id: result[0].id,
+                    });
+                  } catch (error) {
                     res.status(500).send({
-                        error: true, 
-                        message: error.message
-                    })
-                }
-            })
-        } else {
-            db.query('SELECT * FROM admin WHERE username = ?', [data.usernameOrEmail], (err, result) => {
-                try {
-                    if(err) throw error
-                    if(result.length === 1){
-                        if (data.password == result[0].password) {
-                            jwt.sign({id: result[0].id}, '123abc', (err, token) => {
-                                try {
-                                    if(err) throw err
-                                    console.log('ini token with username', token)
-                                    res.status(200).json({
-                                        token: token,
-                                        id: result[0].id
-                                    })
-                                } catch (error) {
-                                    res.status(500).send({
-                                        error: true, 
-                                        message: error.message
-                                    })
-                                }
-                            })
-                        } else {
-                            res.status(400).send({
-                                error: true, 
-                                message: "Incorrect password",
-                            });
-                          }
-                    }else{
-                        res.status(400).send({
-                            error: true, 
-                            message: 'Account not found'
-                        })
-                    }
-                } catch (error) {
-                    res.status(500).send({
-                        error: true, 
-                        message: error.message
-                    })
-                }
-            })
-        }
-        } catch (error) {
+                      error: true,
+                      message: error.message,
+                    });
+                  }
+                });
+              } else {
+                res.status(400).send({
+                  error: true,
+                  message: 'Incorrect password',
+                });
+              }
+            } else {
+              res.status(400).send({
+                error: true,
+                message: 'Account not found',
+              });
+            }
+          } catch (error) {
             res.status(500).send({
-                error: true, 
-                message: error.message
-            })
-        }
-    },
+              error: true,
+              message: error.message,
+            });
+          }
+        });
+      } else {
+        db.query('SELECT * FROM admin WHERE username = ?', [data.usernameOrEmail], (err, result) => {
+          try {
+            if (err) throw error;
+            if (result.length === 1) {
+              if (data.password == result[0].password) {
+                jwt.sign({ id: result[0].id }, '123abc', (err, token) => {
+                  try {
+                    if (err) throw err;
+                    console.log('ini token with username', token);
+                    res.status(200).json({
+                      token: token,
+                      id: result[0].id,
+                    });
+                  } catch (error) {
+                    res.status(500).send({
+                      error: true,
+                      message: error.message,
+                    });
+                  }
+                });
+              } else {
+                res.status(400).send({
+                  error: true,
+                  message: 'Incorrect password',
+                });
+              }
+            } else {
+              res.status(400).send({
+                error: true,
+                message: 'Account not found',
+              });
+            }
+          } catch (error) {
+            res.status(500).send({
+              error: true,
+              message: error.message,
+            });
+          }
+        });
+      }
+    } catch (error) {
+      res.status(500).send({
+        error: true,
+        message: error.message,
+      });
+    }
+  },
+
+  getDataProduct: async (req, res) => {
+    try {
+      const query1 = 'SELECT id, nama_obat AS namaObat,id AS nomorObat, NIE, stok, nilai_barang AS nilaiBarang, harga AS nilaiJual, SatuanObat_id, GolonganObat_id  FROM produk';
+      const products = await query(query1);
+
+      let query2 = `SELECT satuan_obat AS satuanObat FROM satuanobat WHERE id = ?`;
+      for (let i = 0; i < products.length; i++) {
+        let satuan = await query(query2, products[i].SatuanObat_id);
+        products[i] = { ...products[i], satuanObat: satuan[0].satuanObat };
+      }
+      let query3 = `SELECT golongan_obat AS golonganObat FROM golonganobat WHERE id = ?`;
+      for (let i = 0; i < products.length; i++) {
+        let Kategori = await query(query3, products[i].GolonganObat_id);
+        products[i] = { ...products[i], Kategori: Kategori[0].golonganObat };
+      }
+
+      res.status(200).send(products);
+    } catch (error) {
+      console.log(error);
+    }
+  },
+
+  deleteProduct: async (req, res) => {
+    try {
+      const Id = req.params.id;
+
+
+      const sql1 = 'DELETE FROM produk WHERE id = ?;';
+      let sql1Result = await query(sql1, [Id]);
+
+      res.status(200).send({
+        data: sql1Result,
+        error: false,
+        message: 'Delete Product Success!',
+      });
+    } catch (error) {
+      console.log(error.massage);
+    }
+  },
+};
 
     addProduct: (req,res) => {
         try {
@@ -210,103 +251,62 @@ module.exports = {
             }
         })
     },
-    
-    // getProduct: (req,res) => {
-    //     const page = parseInt(req.query.page)
-    //     const limit = parseInt(req.query.limit)
-    //     const startIndex = (page - 1) * limit
-    //     const id = req.dataToken.id 
-    //     var sql = `Select produk.*, produk.id as nomerObat, golonganobat.golongan_obat, satuanobat.satuan_obat from produk JOIN golonganobat ON produk.GolonganObat_id = golonganobat.id JOIN satuanobat ON produk.SatuanObat_id = satuanobat.id ORDER BY produk.id LIMIT ${startIndex},${limit};`
-    //     db.query(sql, (err,result) => {
-    //         if(err) return res.status(500).send({ message: 'Error!', error: err})
-    //         var sql2 = 'SELECT COUNT(produk.id) as TotalData FROM produk;'
-    //     var sql = `Select produk2.*, produk2.id as nomerObat, golonganobat.golongan_obat, satuanobat.satuan_obat from produk2 JOIN golonganobat ON produk2.GolonganObat_id = golonganobat.id JOIN satuanobat ON produk2.SatuanObat_id = satuanobat.id ORDER BY produk2.id LIMIT ${startIndex},${limit};`
-    //     db.query(sql, (err,result) => {
-    //         if(err) return res.status(500).send({ message: 'Error!', error: err})
-    //         var sql2 = 'SELECT COUNT(produk2.id) as TotalData FROM produk2;'
-    //         db.query(sql2, (err2,result2) => {
-    //             if(err2) return res.status(500).send({ message: 'Error!', error: err2})
-    //             return res.status(200).json({
-    //                 result1: result2,
-    //                 result2: result
-    //             })
-    //         })
-    //     })
-    // },
+   
+    getProduct: (req,res) => {
+        const page = parseInt(req.query.page)
+        const limit = parseInt(req.query.limit)
+        const startIndex = (page - 1) * limit
+        const id = req.dataToken.id 
+        var sql = `Select produk.*, produk.id as nomerObat, golonganobat.golongan_obat, satuanobat.satuan_obat from produk JOIN golonganobat ON produk.GolonganObat_id = golonganobat.id JOIN satuanobat ON produk.SatuanObat_id = satuanobat.id ORDER BY produk.id LIMIT ${startIndex},${limit};`
+        db.query(sql, (err,result) => {
+            if(err) return res.status(500).send({ message: 'Error!', error: err})
+            var sql2 = 'SELECT COUNT(produk.id) as TotalData FROM produk;'
+            db.query(sql2, (err2,result2) => {
+                if(err2) return res.status(500).send({ message: 'Error!', error: err2})
+                return res.status(200).json({
+                    result1: result2,
+                    result2: result
+                })
+            })
+        })
+    },
 
-    // getUnikIDProduct: (req,res) => {
-    //     var produk_id = parseInt(req.query.id);
-    //     const id = req.dataToken.id 
-    //     var sql = `Select produk.*, produk.id as nomerObat, golonganobat.golongan_obat, satuanobat.satuan_obat from produk JOIN golonganobat ON produk.GolonganObat_id = golonganobat.id JOIN satuanobat ON produk.SatuanObat_id = satuanobat.id WHERE produk.id = ${produk_id}`
-    //     db.query(sql, (err,result) => {
-    //         if(err) return res.status(500).send({ message: 'Error!', error: err})
-    //         console.log(result)
-    //         return res.status(200).json(result)
-    //     })
-    // },
+    pagination: async(req, res) => {
+        try {
+            const page = parseInt(req.query.page)
+            const limit = parseInt(req.query.limit)
+            const start = (page - 1) * limit
+            const end = page * limit
 
+            let query1 = `Select produk.*, produk.id as nomerObat, golonganobat.golongan_obat, satuanobat.satuan_obat from produk JOIN golonganobat ON produk.GolonganObat_id = golonganobat.id JOIN satuanobat ON produk.SatuanObat_id = satuanobat.id ORDER BY produk.id LIMIT ${start},${limit};`
+            const findProduk = await query(query1, {
+                attributes: [['id', 'id'], ['nama_obat', 'nama_obat']],
+                order: [['id']],
+                limit: limit,
+                offset: start
+            })
 
-    // pagination: async(req, res) => {
-    //     try {
-    //         const page = parseInt(req.query.page)
-    //         const limit = parseInt(req.query.limit)
-    //         const start = (page - 1) * limit
-    //         const end = page * limit
+            let query2 = 'SELECT COUNT(produk.id) as TotalData FROM produk;'
+            const countProduk = await query(query2)
+            console.log('countProduk', countProduk[0].TotalData)
 
-    //         let query1 = `Select produk.*, produk.id as nomerObat, golonganobat.golongan_obat, satuanobat.satuan_obat from produk JOIN golonganobat ON produk.GolonganObat_id = golonganobat.id JOIN satuanobat ON produk.SatuanObat_id = satuanobat.id ORDER BY produk.id LIMIT ${start},${limit};`
-    //         let query1 = `Select produk.*, produk.id as nomerObat, golonganobat.golongan_obat, satuanobat.satuan_obat from produk JOIN golonganobat ON produk.GolonganObat_id = golonganobat.id JOIN satuanobat ON produk2.SatuanObat_id = satuanobat.id ORDER BY produk.id LIMIT ${start},${limit};`
-    //         const findProduk = await query(query1, {
-    //             attributes: [['id', 'id'], ['nama_obat', 'nama_obat']],
-    //             order: [['id']],
-    //             limit: limit,
-    //             offset: start
-    //         })
-
-    //         let query2 = 'SELECT COUNT(produk.id) as TotalData FROM produk;'
-    //         let query2 = 'SELECT COUNT(produk.id) as TotalData FROM produk2;'
-
-    //         const countProduk = await query(query2)
-    //         console.log('countProduk', countProduk[0].TotalData)
-
-    //         let countFiltered = parseInt(countProduk[0].TotalData)
-    //         let pagination = {}
-    //         pagination.totalRow = countProduk
-    //         pagination.totalPage = Math.ceil(countFiltered/limit)
-    //         console.log('pagination.totalPage', pagination.totalPage)
-
-    //         if (end < countFiltered){
-    //             pagination.next = {
-    //                 page : pagination.totalPage - page,
-    //                 limit
-    //             }
-    //         }
-
-    //         if (start > 0){
-    //             pagination.prev = {
-    //                 page : page - 1,
-    //                 limit
-    //             }
-    //         }
-
-
-
-    //         if(findProduk.length == 0){
-    //             throw { message: 'Produk Not Found' }
-    //         }else {
-    //             res.status(201).send({
-    //                 status: 201,
-    //                 error: false,
-    //                 message: 'Pagination Success',
-    //                 pagination,
-    //                 data: findProduk
-    //             })
-    //         }
-    //     } catch (error) {
-    //         res.status(500).send({
-    //             error: true, 
-    //             message: error.message
-    //         })
-    //     }
-    // }, 
-
+            if(findProduk.length == 0){
+                throw { message: 'Produk Not Found' }
+            }else {
+                res.status(201).send({
+                    status: 201,
+                    error: false,
+                    message: 'Pagination Success',
+                    pagination,
+                    data: findProduk
+                })
+            }
+        } catch (error) {
+            res.status(500).send({
+                error: true, 
+                message: error.message
+            })
+        }
+    }, 
 }
+
