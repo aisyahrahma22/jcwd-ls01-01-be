@@ -1,6 +1,7 @@
 const db = require('../Connection/Connection');
 const util = require('util');
 const query = util.promisify(db.query).bind(db);
+const { uploader } = require('../Helpers/Uploader');
 
 module.exports = {
     addToCart: async(req,res) => {
@@ -47,7 +48,7 @@ module.exports = {
             let products = await query(query1, id)
 
             const query2 = `SELECT nama_obat AS namaObat, satuanObat_id AS satuanObatId,
-            harga, gambar, stok, keluhan_id AS keluhanId, golonganObat_id AS golonganObatId
+            harga, diskon, gambar, stok, keluhan_id AS keluhanId, golonganObat_id AS golonganObatId
             FROM produk WHERE id = ?`
             for (let i = 0; i < products.length; i++) {
                 let detail = await query(query2, products[i].produkId)
@@ -128,7 +129,7 @@ module.exports = {
             let products = await query(query1, id)
 
             const query2 = `SELECT nama_obat AS namaObat, satuanObat_id AS satuanObatId,
-            harga, gambar, berat FROM produk WHERE id = ?`
+            harga, diskon, gambar, berat FROM produk WHERE id = ?`
             for (let i = 0; i < products.length; i++) {
                 let detail = await query(query2, products[i].produkId)
                 products[i] = { ...products[i], ...detail[0]}
@@ -165,5 +166,106 @@ module.exports = {
                 message: error.message
             })
         }
+    },
+
+    getMaxId: async(req,res) => {
+        try {
+            const query1 = `SELECT MAX(id) AS maxId FROM transaksi;`
+            let maxId = await query(query1)
+            res.status(200).send(maxId)
+        } catch (error) {
+            res.status(500).send({
+                status: 500,
+                error: true,
+                message: error.message
+            })
+        }
+    },
+
+    addNewTransaction: async (req,res) => {
+        try {
+            const {
+                noPemesanan,labelAlamat,namaDepan,namaBelakang,noHp,idProvinsi,
+                provinsi,idKabupaten_kota,kabupatenKota,alamat,kodePos,totalPembayaran,
+                kurir,ongkir,MetodePembayaranId
+            } = req.body.dataTransaksi
+            const products = req.body.products
+            const userId = req.dataToken.id 
+
+            const query1 = `INSERT INTO transaksi (no_pemesanan, label_alamat, nama_depan_penerima,
+                nama_belakang_penerima, no_hp, id_provinsi, provinsi, id_kabupaten_kota,
+                kabupaten_kota, alamat, kode_pos, total_pembayaran, kurir, ongkir, MetodePembayaran_id, User_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`
+            await query(query1, [noPemesanan,labelAlamat,namaDepan,namaBelakang,
+            noHp,idProvinsi,provinsi,idKabupaten_kota,kabupatenKota,alamat,kodePos,totalPembayaran,
+            kurir,ongkir,MetodePembayaranId,userId])
+            
+            const query2 = `SELECT MAX(id) AS id FROM transaksi WHERE User_id = ?;`
+            let transactionId = await query(query2, userId)
+
+            const query3 = `INSERT INTO detailtransaksi (nama_produk, harga_produk,
+                gambar_produk, quantity, satuan_produk, Produk_id, Transaksi_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?)`
+            products.forEach(p => {
+                query(query3, [p.namaObat, p.harga, p.gambar, p.quantity, p.satuanObat, p.produkId, transactionId[0].id])
+            });
+            res.status(200).send({error: false, message:'Success!'})
+        } catch (error) {
+            res.status(500).send({
+                status: 500,
+                error: true,
+                message: error.message
+            })
+        }
+    },
+
+    getPaymentDetails: async(req,res) => {
+        try {
+            const id = req.query.transactionid
+            
+            const query1 = `SELECT created_at AS createdAt, total_pembayaran AS totalPembayaran, 
+            MetodePembayaran_id FROM transaksi WHERE id = ?;`
+            const transaction = await query(query1, id)
+
+            const query2 = `SELECT id, nama_produk AS nama, harga_produk AS harga,
+            quantity, gambar_produk AS gambar, satuan_produk AS satuan FROM detailtransaksi WHERE Transaksi_id = ?`
+            const products = await query(query2, id)
+            
+            const query3 = `SELECT * FROM metodepembayaran WHERE id = ?`
+            const metodePembayaran = await query(query3, transaction[0].MetodePembayaran_id)
+            
+            res.status(200).send({transaction: transaction[0], products, metodePembayaran: metodePembayaran[0]})
+        } catch (error) {
+            res.status(500).send({
+                status: 500,
+                error: true,
+                message: error.message
+            })
+        }
+    },
+
+    uploadPaymentProof: (req, res) => {
+    const path = 'Public/buktipembayaran';
+    const upload = uploader(path, 'PROOF').fields([{ name: 'image' }]);
+
+    upload(req, res, (err) => {
+        if (err) {
+        return res.status(500).json({ message: 'Image upload failed!', error: err.message });
+        }
+        const { image } = req.files;
+        const imagePath = image ? path + '/' + image[0].filename : null;
+        const data = JSON.parse(req.body.data);
+        try {
+            const query1 = `UPDATE transaksi SET bukti_pembayaran = ? WHERE id = ?;`
+            db.query(query1, [imagePath, data.id], (err, result) => {
+            if(err) return res.status(500).send({ message: 'Error!', error: err})
+            return res.status(200).send({error: false, message:'Success!'})
+        })   
+            
+        } catch (err) {
+            console.log(err.message);
+            return res.status(500).json({ message: 'Server Error', error: err });
+        }
+    });
     },
 }

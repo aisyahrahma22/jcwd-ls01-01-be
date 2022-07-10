@@ -366,7 +366,8 @@ module.exports = {
     });
   },
   editProfileData: (req, res) => {
-    var id = req.dataToken.id;
+    const data = JSON.parse(req.body.data);
+    console.log(data)
 
     var sql = `SELECT * from user where id = ${id};`;
     db.query(sql, (err, results) => {
