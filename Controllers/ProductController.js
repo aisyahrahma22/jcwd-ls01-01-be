@@ -300,5 +300,15 @@ searchProducts: async(req, res) => {
 
         })
     },
+
+    getResep: (req,res) => {
+        const id = req.dataToken.id 
+        var sql = `SELECT * from resep WHERE User_id = ${id}`
+        db.query(sql, (err,result) => {
+            if(err) return res.status(500).send({ message: 'Error!', error: err})
+
+            return res.status(200).json(result)
+        })
+    },
    
 };

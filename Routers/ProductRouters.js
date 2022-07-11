@@ -12,5 +12,6 @@ Router.get('/relatedproducts', ProductController.getRelatedProducts);
 Router.get('/searchproducts', ProductController.searchProducts);
 Router.get('/diskon', ProductController.diskon);
 Router.get('/homeproduk', ProductController.getHomeProduk);
+Router.get('/getresep', jwtVerify, ProductController.getResep);
 
 module.exports = Router;

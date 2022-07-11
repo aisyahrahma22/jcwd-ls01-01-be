@@ -156,13 +156,8 @@ module.exports = {
       const sql1 = 'DELETE FROM produk WHERE id = ?;';
       let sql1Result = await query(sql1, [Id]);
       console.log('sql1Result', sql1Result)
-
-      const page = parseInt(req.query.page)
-      const limit = parseInt(req.query.limit)
-      const start = (page - 1) * limit
-      const end = page * limit
       
-      const sql2 = `Select produk.*, produk.id as nomerObat, golonganobat.golongan_obat, satuanobat.satuan_obat from produk JOIN golonganobat ON produk.GolonganObat_id = golonganobat.id JOIN satuanobat ON produk.SatuanObat_id = satuanobat.id ORDER BY produk.id DESC LIMIT ${start},${limit};`
+      const sql2 = `Select produk.*, produk.id as nomerObat, golonganobat.golongan_obat, satuanobat.satuan_obat from produk JOIN golonganobat ON produk.GolonganObat_id = golonganobat.id JOIN satuanobat ON produk.SatuanObat_id = satuanobat.id ORDER BY produk.id;`
       let sql2Result = await query(sql2);
       console.log('sql2Result', sql2Result)
 
