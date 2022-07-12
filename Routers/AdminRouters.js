@@ -16,7 +16,9 @@ Router.get("/getprodukID",  jwtVerify, AdminController.getUnikIDProduct);
 Router.get("/paginate",  jwtVerify, AdminController.pagination);
 Router.post('/addproduct', jwtVerify, AdminController.addProduct) 
 Router.patch('/editproduct', jwtVerify, AdminController.editProduct)
-Router.get('/search', AdminController.search)
+Router.get('/search', AdminController.search);
+Router.get("/paginatestok/:id",  jwtVerify, AdminController.paginationStok);
+Router.get("/gettokenadmin",  jwtVerify, AdminController.getTokenAdmin);
 
 
 module.exports = Router;
