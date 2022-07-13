@@ -15,6 +15,12 @@ Router.get('/getmaxid', TransactionController.getMaxId)
 Router.post('/addnewtransaction', jwtVerify, TransactionController.addNewTransaction)
 Router.get('/getpaymentdetails', jwtVerify, TransactionController.getPaymentDetails)
 Router.patch('/uploadpaymentproof', jwtVerify, TransactionController.uploadPaymentProof);
+Router.get('/getsemuapesanan', jwtVerify, TransactionController.getSemuaPesananUser);
+Router.get('/getmenunggupesanan', jwtVerify, TransactionController.getMenungguPesananUser);
+Router.get('/getdiprosespesanan', jwtVerify, TransactionController.getPesananDiprosesUser);
+Router.get('/getdikirimpesanan', jwtVerify, TransactionController.getPesananDikirimUser);
+Router.get('/getselesaipesanan', jwtVerify, TransactionController.getPesananSelesaiUser);
+Router.get('/getdibatalkanpesanan', jwtVerify, TransactionController.getPesananDibatalkanUser);
 
 // set transaksi
 // set detail transaksi

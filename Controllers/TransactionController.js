@@ -268,4 +268,106 @@ module.exports = {
         }
     });
     },
+    getSemuaPesananUser: (req,res) => {
+        const id = req.dataToken.id 
+        var sql = `SELECT transaksi.*, statustransaksi.status_transaksi FROM transaksi JOIN statustransaksi ON transaksi.statusTransaksi_id = statustransaksi.id WHERE transaksi.User_id = ${id}`
+        db.query(sql, (err,result) => {
+            if(err) return res.status(500).send({ message: 'Error!', error: err})
+            console.log(result)
+            var sql2 = `SELECT detailtransaksi.*, transaksi.User_id, transaksi.statusTransaksi_id FROM detailtransaksi JOIN transaksi ON detailtransaksi.Transaksi_id = transaksi.id WHERE transaksi.User_id = ${id}`
+            db.query(sql2, (err2,result2) => {
+                if(err2) return res.status(500).send({ message: 'Error!', error: err2})
+                console.log(result2)
+                return res.status(200).json({
+                    transaksi: result,
+                    detailtransaksi: result2
+                })
+            })
+        })
+    },
+    getMenungguPesananUser: (req,res) => {
+        const id = req.dataToken.id 
+        var sql = `SELECT transaksi.*, statustransaksi.status_transaksi FROM transaksi JOIN statustransaksi ON transaksi.statusTransaksi_id = statustransaksi.id WHERE transaksi.User_id = ${id} AND transaksi.statusTransaksi_id = 1 or transaksi.statusTransaksi_id = 2 or transaksi.statusTransaksi_id = 3`
+        db.query(sql, (err,result) => {
+            if(err) return res.status(500).send({ message: 'Error!', error: err})
+            console.log(result)
+            var sql2 = `SELECT detailtransaksi.*, transaksi.User_id, transaksi.statusTransaksi_id FROM detailtransaksi JOIN transaksi ON detailtransaksi.Transaksi_id = transaksi.id WHERE transaksi.User_id  = ${id} AND transaksi.statusTransaksi_id = 1 or transaksi.statusTransaksi_id = 2 or transaksi.statusTransaksi_id = 3`
+            db.query(sql2, (err2,result2) => {
+                if(err2) return res.status(500).send({ message: 'Error!', error: err2})
+                console.log(result2)
+                return res.status(200).json({
+                    transaksi: result,
+                    detailtransaksi: result2
+                })
+            })
+        })
+    },
+    getPesananDiprosesUser: (req,res) => {
+        const id = req.dataToken.id 
+        var sql = `SELECT transaksi.*, statustransaksi.status_transaksi FROM transaksi JOIN statustransaksi ON transaksi.statusTransaksi_id = statustransaksi.id WHERE transaksi.User_id = ${id} AND transaksi.statusTransaksi_id = 4`
+        db.query(sql, (err,result) => {
+            if(err) return res.status(500).send({ message: 'Error!', error: err})
+            console.log(result)
+            var sql2 = `SELECT detailtransaksi.*, transaksi.User_id, transaksi.statusTransaksi_id FROM detailtransaksi JOIN transaksi ON detailtransaksi.Transaksi_id = transaksi.id WHERE transaksi.User_id  = ${id} AND transaksi.statusTransaksi_id = 4`
+            db.query(sql2, (err2,result2) => {
+                if(err2) return res.status(500).send({ message: 'Error!', error: err2})
+                console.log(result2)
+                return res.status(200).json({
+                    transaksi: result,
+                    detailtransaksi: result2
+                })
+            })
+        })
+    },
+    getPesananDikirimUser: (req,res) => {
+        const id = req.dataToken.id 
+        var sql = `SELECT transaksi.*, statustransaksi.status_transaksi FROM transaksi JOIN statustransaksi ON transaksi.statusTransaksi_id = statustransaksi.id WHERE transaksi.User_id = ${id} AND transaksi.statusTransaksi_id = 5`
+        db.query(sql, (err,result) => {
+            if(err) return res.status(500).send({ message: 'Error!', error: err})
+            console.log(result)
+            var sql2 = `SELECT detailtransaksi.*, transaksi.User_id, transaksi.statusTransaksi_id FROM detailtransaksi JOIN transaksi ON detailtransaksi.Transaksi_id = transaksi.id WHERE transaksi.User_id  = ${id} AND transaksi.statusTransaksi_id = 5`
+            db.query(sql2, (err2,result2) => {
+                if(err2) return res.status(500).send({ message: 'Error!', error: err2})
+                console.log(result2)
+                return res.status(200).json({
+                    transaksi: result,
+                    detailtransaksi: result2
+                })
+            })
+        })
+    },
+    getPesananSelesaiUser: (req,res) => {
+        const id = req.dataToken.id 
+        var sql = `SELECT transaksi.*, statustransaksi.status_transaksi FROM transaksi JOIN statustransaksi ON transaksi.statusTransaksi_id = statustransaksi.id WHERE transaksi.User_id = ${id} AND transaksi.statusTransaksi_id = 6`
+        db.query(sql, (err,result) => {
+            if(err) return res.status(500).send({ message: 'Error!', error: err})
+            console.log(result)
+            var sql2 = `SELECT detailtransaksi.*, transaksi.User_id, transaksi.statusTransaksi_id FROM detailtransaksi JOIN transaksi ON detailtransaksi.Transaksi_id = transaksi.id WHERE transaksi.User_id  = ${id} AND transaksi.statusTransaksi_id = 6`
+            db.query(sql2, (err2,result2) => {
+                if(err2) return res.status(500).send({ message: 'Error!', error: err2})
+                console.log(result2)
+                return res.status(200).json({
+                    transaksi: result,
+                    detailtransaksi: result2
+                })
+            })
+        })
+    },
+    getPesananDibatalkanUser: (req,res) => {
+        const id = req.dataToken.id 
+        var sql = `SELECT transaksi.*, statustransaksi.status_transaksi FROM transaksi JOIN statustransaksi ON transaksi.statusTransaksi_id = statustransaksi.id WHERE transaksi.User_id = ${id} AND transaksi.statusTransaksi_id = 7`
+        db.query(sql, (err,result) => {
+            if(err) return res.status(500).send({ message: 'Error!', error: err})
+            console.log(result)
+            var sql2 = `SELECT detailtransaksi.*, transaksi.User_id, transaksi.statusTransaksi_id FROM detailtransaksi JOIN transaksi ON detailtransaksi.Transaksi_id = transaksi.id WHERE transaksi.User_id  = ${id} AND transaksi.statusTransaksi_id = 7`
+            db.query(sql2, (err2,result2) => {
+                if(err2) return res.status(500).send({ message: 'Error!', error: err2})
+                console.log(result2)
+                return res.status(200).json({
+                    transaksi: result,
+                    detailtransaksi: result2
+                })
+            })
+        })
+    },
 }
