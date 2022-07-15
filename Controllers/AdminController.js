@@ -171,17 +171,24 @@ module.exports = {
 
       const sql1 = 'DELETE FROM produk WHERE id = ?;';
       let sql1Result = await query(sql1, [Id]);
-      console.log('sql1Result', sql1Result)
       
-      const sql2 = `Select produk.*, produk.id as nomerObat, golonganobat.golongan_obat, satuanobat.satuan_obat from produk JOIN golonganobat ON produk.GolonganObat_id = golonganobat.id JOIN satuanobat ON produk.SatuanObat_id = satuanobat.id ORDER BY produk.id;`
-      let sql2Result = await query(sql2);
-      console.log('sql2Result', sql2Result)
+      // const sql2 = `Select produk.nama_obat, produk.NIE, produk.stok, produk.harga, produk.nilai_barang, produk.id, golonganobat.golongan_obat, satuanobat.satuan_obat from produk JOIN golonganobat ON produk.GolonganObat_id = golonganobat.id JOIN satuanobat ON produk.SatuanObat_id = satuanobat.id ORDER BY produk.id;`
+      // let sql2Result = await query(sql2);
+  
+      // var newArray = []
+      // for (let i = 0; i < sql2Result.length; i++) {
+      //     let data = sql2Result[i]
+      //     let newData = data.slice(1, 115)
+      //     newArray.push(newData)
+      // }
 
+      // console.log('newArray ', newArray )
+  
       res.status(200).send({
         deleteData: sql1Result,
         error: false,
         message: 'Delete Product Success!',
-        data: sql2Result
+        // result: newArray 
       });
     } catch (error) {
       console.log(error.massage);
@@ -328,24 +335,24 @@ editProduct: (req,res) => {
     })
 },
 
-getProduct: (req,res) => {
-    const page = parseInt(req.query.page)
-    const limit = parseInt(req.query.limit)
-    const startIndex = (page - 1) * limit
-    const id = req.dataToken.id 
-    var sql = `Select produk.*, produk.id as nomerObat, golonganobat.golongan_obat, satuanobat.satuan_obat from produk JOIN golonganobat ON produk.GolonganObat_id = golonganobat.id JOIN satuanobat ON produk.SatuanObat_id = satuanobat.id ORDER BY produk.id LIMIT ${startIndex},${limit};`
-    db.query(sql, (err,result) => {
-        if(err) return res.status(500).send({ message: 'Error!', error: err})
-        var sql2 = 'SELECT COUNT(produk.id) as TotalData FROM produk;'
-        db.query(sql2, (err2,result2) => {
-            if(err2) return res.status(500).send({ message: 'Error!', error: err2})
-            return res.status(200).json({
-                result1: result2,
-                result2: result
-            })
-        })
-    })
-},
+// getProduct: (req,res) => {
+//     const page = parseInt(req.query.page)
+//     const limit = parseInt(req.query.limit)
+//     const startIndex = (page - 1) * limit
+//     const id = req.dataToken.id 
+//     var sql = `Select produk.*, produk.id as nomerObat, golonganobat.golongan_obat, satuanobat.satuan_obat from produk JOIN golonganobat ON produk.GolonganObat_id = golonganobat.id JOIN satuanobat ON produk.SatuanObat_id = satuanobat.id ORDER BY produk.id LIMIT ${startIndex},${limit};`
+//     db.query(sql, (err,result) => {
+//         if(err) return res.status(500).send({ message: 'Error!', error: err})
+//         var sql2 = 'SELECT COUNT(produk.id) as TotalData FROM produk;'
+//         db.query(sql2, (err2,result2) => {
+//             if(err2) return res.status(500).send({ message: 'Error!', error: err2})
+//             return res.status(200).json({
+//                 result1: result2,
+//                 result2: result
+//             })
+//         })
+//     })
+// },
 
 getUnikIDProduct: (req,res) => {
     var produk_id = parseInt(req.query.id);
@@ -365,37 +372,19 @@ pagination: async(req, res) => {
         const start = (page - 1) * limit
         const end = page * limit
 
-        let query1 = `Select produk.*, produk.id as nomerObat, golonganobat.golongan_obat, satuanobat.satuan_obat from produk JOIN golonganobat ON produk.GolonganObat_id = golonganobat.id JOIN satuanobat ON produk.SatuanObat_id = satuanobat.id ORDER BY produk.id LIMIT ${start},${limit};`
+        let query1 = `Select produk.nama_obat, produk.NIE, produk.stok, produk.harga, produk.nilai_barang, produk.id, golonganobat.golongan_obat, satuanobat.satuan_obat from produk JOIN golonganobat ON produk.GolonganObat_id = golonganobat.id JOIN satuanobat ON produk.SatuanObat_id = satuanobat.id ORDER BY produk.id LIMIT ${start},${limit};`
         const findProduk = await query(query1, {
-            attributes: [['id', 'id'], ['nama_obat', 'nama_obat']],
-            order: [['id']],
             limit: limit,
             offset: start
         })
-
+  
         let query2 = 'SELECT COUNT(produk.id) as TotalData FROM produk;'
         const countProduk = await query(query2)
-        console.log('countProduk', countProduk[0].TotalData)
 
         let countFiltered = parseInt(countProduk[0].TotalData)
         let pagination = {}
         pagination.totalRow = countProduk
         pagination.totalPage = Math.ceil(countFiltered/limit)
-        console.log('pagination.totalPage', pagination.totalPage)
-
-        if (end < countFiltered){
-            pagination.next = {
-                page : pagination.totalPage - page,
-                limit
-            }
-        }
-
-        if (start > 0){
-            pagination.prev = {
-                page : page - 1,
-                limit
-            }
-        }
 
         if(findProduk.length == 0){
             throw { message: 'Produk Not Found' }
@@ -418,18 +407,29 @@ pagination: async(req, res) => {
 
 search: async(req, res) => {
   try {
-   
+    const page = parseInt(req.query.page)
+    const limit = parseInt(req.query.limit)
+    const start = (page - 1) * limit
+    const end = page * limit
     const data = parseInt(req.query.kategori)
     const nama = req.query.nama
-       
+
      if(data || nama){
-      db.query(`Select produk.*, produk.id as nomerObat, golonganobat.golongan_obat, satuanobat.satuan_obat from produk JOIN golonganobat ON produk.GolonganObat_id = golonganobat.id JOIN satuanobat ON produk.SatuanObat_id = satuanobat.id WHERE produk.nama_obat LIKE "%${nama}%" AND produk.GolonganObat_id = ${data};`, (err, result) => {
+      db.query(`Select produk.nama_obat, produk.NIE, produk.stok, produk.harga, produk.nilai_barang, produk.id, golonganobat.golongan_obat, satuanobat.satuan_obat from produk JOIN golonganobat ON produk.GolonganObat_id = golonganobat.id JOIN satuanobat ON produk.SatuanObat_id = satuanobat.id WHERE produk.nama_obat LIKE "%${nama}%" AND produk.GolonganObat_id = ${data} LIMIT ${start},${limit};`, (err, result) => {
           try {
               if(err) throw err 
               
+              var newArray = []
+              for (let i = 0; i < result.length; i++) {
+                  let randomId = Math.random(result[i].id).toString(36).substr(2, 9).toUpperCase()
+                  newArray.push(randomId)
+              }
+              
               res.status(200).send({
                   error: false, 
-                  result: result
+                  id: newArray,
+                  result: result,
+                  total: result.length
               })
           } catch (error) {
               res.status(500).send({
