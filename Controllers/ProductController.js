@@ -139,19 +139,28 @@ try {
     var sql = `INSERT INTO resep (gambar_resep, User_id) VALUES ('${imagePath}', '${id}');`;
     db.query(sql, (err, results) => {
       console.log('ini results', results);
-      console.log('ini err', err);
+    //   console.log('ini err', results[0].insertId);
+      console.log('ini err', results.insertId);
       if (err) {
         return res.status(500).json({ message: 'Server Error', error: err.message });
       }
 
-      sql = `SELECT * from resep where User_id = ${id};`;
-      db.query(sql, id, (err2, results2) => {
+      var sql2 =`INSERT INTO transaksi (no_pemesanan, User_id, statusTransaksi_id) VALUES ('APTKBBR${results.insertId}', '${id}', "1");`
+      db.query(sql2, (err2, results2) => {
         console.log('ini results2', results2);
         if (err2) {
           return res.status(500).json({ message: 'Server Error', error: err.message });
         }
 
-        return res.status(200).send(results2);
+        var sql3 = `SELECT * from resep where User_id = ${id};`
+        db.query(sql3, (err3, results3) => {
+            console.log('ini results3', results3);
+            if (err3) {
+            return res.status(500).json({ message: 'Server Error', error: err.message });
+            }
+
+        return res.status(200).send(results3);
+      });
       });
     });
   });

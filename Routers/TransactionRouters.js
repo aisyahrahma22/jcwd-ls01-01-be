@@ -21,6 +21,7 @@ Router.get('/getdiprosespesanan', jwtVerify, TransactionController.getPesananDip
 Router.get('/getdikirimpesanan', jwtVerify, TransactionController.getPesananDikirimUser);
 Router.get('/getselesaipesanan', jwtVerify, TransactionController.getPesananSelesaiUser);
 Router.get('/getdibatalkanpesanan', jwtVerify, TransactionController.getPesananDibatalkanUser);
+Router.get('/getdetailpesanan', TransactionController.getDetailProdukPesanan);
 
 // set transaksi
 // set detail transaksi
