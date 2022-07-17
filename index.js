@@ -10,12 +10,14 @@ const db = require('./Connection/Connection');
 const UserRouters = require('./Routers/UserRouters');
 const ProductRouters = require('./Routers/ProductRouters');
 const TransactionRouters = require('./Routers/TransactionRouters');
-const AdminRouters = require('./Routers/AdminRouters')
+const AdminRouters = require('./Routers/AdminRouters');
+const RajaOngkir = require('./Routers/RajaOngkirRoute');
 
-app.use('/admin', AdminRouters)
+app.use('/admin', AdminRouters);
 app.use('/user', UserRouters);
 app.use('/product', ProductRouters);
 app.use('/transaction', TransactionRouters);
+app.use('/rajaongkir', RajaOngkir);
 
 app.use('/Public/', express.static(__dirname + '/Public'));
 

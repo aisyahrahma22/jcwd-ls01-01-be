@@ -9,14 +9,18 @@ const AdminController = require('../Controllers/AdminController');
 const jwtVerify = require('../Middleware/JWT');
 
 
-Router.get('/dataproduct', AdminController.getDataProduct);
-Router.delete('/deleteproduct/:id', AdminController.deleteProduct);
+Router.get('/dataproduct', jwtVerify, AdminController.getDataProduct);
+Router.delete('/deleteproduct/:id', jwtVerify, AdminController.deleteProduct);
 Router.post('/loginadmin', AdminController.login) 
-// Router.get("/getprodukID",  jwtVerify, AdminController.getUnikIDProduct);
-// Router.get("/paginate",  jwtVerify, AdminController.pagination);
+Router.get("/getprodukID",  jwtVerify, AdminController.getUnikIDProduct);
+Router.get("/paginate",  jwtVerify, AdminController.pagination);
 Router.post('/addproduct', jwtVerify, AdminController.addProduct) 
 Router.patch('/editproduct', jwtVerify, AdminController.editProduct)
+Router.get('/search', AdminController.search);
+Router.get("/paginatestok/:id",  jwtVerify, AdminController.paginationStok);
+Router.get("/gettokenadmin",  jwtVerify, AdminController.getTokenAdmin);
 Router.get('/transactioncount', jwtVerify, AdminController.transactionCount);
 Router.get('/transactiondetail', jwtVerify, AdminController.transactionDetail);
+
 
 module.exports = Router;

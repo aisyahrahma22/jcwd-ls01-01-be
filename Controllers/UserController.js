@@ -8,6 +8,7 @@ const transporter = require('../Helpers/Transporter');
 const fs = require('fs');
 const handlebars = require('handlebars');
 const jwt = require('jsonwebtoken');
+const path = require("path");
 
 module.exports = {
   register: async (req, res) => {
@@ -55,6 +56,14 @@ module.exports = {
           db.query(query3, [token, insertUser.insertId], (err1, result1) => {
             try {
               if (err1) throw err1;
+              let emailType = "index.html"
+              console.log('emailType', emailType)
+              let filepath = path.resolve(__dirname, `../Public/Template/${emailType}`);
+              console.log('filepath', filepath)
+              let htmlString = fs.readFileSync(filepath, "utf-8");
+          
+              const template = handlebars.compile(htmlString);
+              const htmlToEmail = template({link: `http://localhost:3000/confirmation/${token}`});
 
               // Step5.1. Send Email Confirmation
 
@@ -71,10 +80,10 @@ module.exports = {
 
               transporter
                 .sendMail({
-                  from: 'myUniverse@mail.com',
+                  from: 'apoatakecare@gmail.com',
                   to: data.email,
                   subject: 'Email Confirmation',
-                  html: `<div>welcome</div>`,
+                  html: htmlToEmail,
                 })
                 .then((response) => {
                   res.status(200).send({
@@ -132,15 +141,22 @@ module.exports = {
           try {
             if (err) throw err;
             db.query('UPDATE user SET token = ?  WHERE id = ?', [token, result[0].id], (err1, result1) => {
+              console.log('result1 user login', result1)
               try {
                 if (err1) throw err1;
-                res.status(200).send({
-                  error: false,
-                  message: 'Login Success',
-                  token: token,
-                  id: result[0].id,
-                  verified: result[0].verified,
-                });
+                var sql2 = `SELECT * from user where id = ${result[0].id} ;`
+                db.query(sql2, (err2,result2) => {
+                  console.log('result2 login user', result2)
+                    if(err2) return res.status(500).send({ message: 'Error!', error: err2})
+                    return res.status(200).json({
+                        error: false,
+                        message: 'Login Success',
+                        token: result2[0].token,
+                        username: result2[0].username,
+                        email: result2[0].email,
+                        verified: result2[0].verified,
+                    })
+                })
               } catch (error) {
                 console.log(error);
               }
@@ -307,39 +323,48 @@ module.exports = {
               db.query(query3, [token, id], (err1, result1) => {
                 try {
                   if (err1) throw err1;
+                  let emailType = "index.html"
+                  console.log('emailType', emailType)
+                  let filepath = path.resolve(__dirname, `../Public/Template/${emailType}`);
+                  console.log('filepath', filepath)
+                  let htmlString = fs.readFileSync(filepath, "utf-8");
+              
+                  const template = handlebars.compile(htmlString);
+                  const htmlToEmail = template({link: `http://localhost:3000/confirmation/${token}`});
 
-                  fs.readFile(
-                    'C:/My Project/jcwd-ls01-01-be/Public/Template/index.html',
-                    {
-                      encoding: 'utf-8',
-                    },
-                    (err, file) => {
-                      if (err) throw err;
+                  transporter
+                  .sendMail({
+                    from: 'apotakecare@mail.com',
+                    to: email,
+                    subject: 'Email Confirmation',
+                    html: htmlToEmail,
+                  })
+                  .then((response) => {
+                    res.status(200).send({
+                      error: false,
+                      message: 'Please Check Email to Verify Your Account!',
+                    });
+                  })
+                  .catch((error) => {
+                    res.status(500).send({
+                      error: false,
+                      message: error.message,
+                    });
+                  });
+                  // fs.readFile(
+                  //   'C:/My Project/jcwd-ls01-01-be/Public/Template/index.html',
+                  //   {
+                  //     encoding: 'utf-8',
+                  //   },
+                  //   (err, file) => {
+                  //     if (err) throw err;
 
-                      const newTemplate = handlebars.compile(file);
-                      const newTemplateResult = newTemplate({ bebas: email, link: `http://localhost:3000/confirmation/${token}` });
+                  //     const newTemplate = handlebars.compile(file);
+                  //     const newTemplateResult = newTemplate({ bebas: email, link: `http://localhost:3000/confirmation/${token}` });
 
-                      transporter
-                        .sendMail({
-                          from: 'apotakecare@mail.com',
-                          to: email,
-                          subject: 'Email Confirmation',
-                          html: newTemplateResult,
-                        })
-                        .then((response) => {
-                          res.status(200).send({
-                            error: false,
-                            message: 'Please Check Email to Verify Your Account!',
-                          });
-                        })
-                        .catch((error) => {
-                          res.status(500).send({
-                            error: false,
-                            message: error.message,
-                          });
-                        });
-                    }
-                  );
+                     
+                  //   }
+                  // );
                 } catch (error) {
                   res.status(500).send({
                     error: true,
@@ -366,8 +391,7 @@ module.exports = {
     });
   },
   editProfileData: (req, res) => {
-    const data = JSON.parse(req.body.data);
-    console.log(data)
+    var id = req.dataToken.id;
 
     var sql = `SELECT * from user where id = ${id};`;
     db.query(sql, (err, results) => {
@@ -491,6 +515,14 @@ module.exports = {
               db.query(query3, [token, id], (err1, result1) => {
                 try {
                   if (err1) throw err1;
+                  let emailType = "index2.html"
+                  console.log('emailType', emailType)
+                  let filepath = path.resolve(__dirname, `../Public/Template/${emailType}`);
+                  console.log('filepath', filepath)
+                  let htmlString = fs.readFileSync(filepath, "utf-8");
+              
+                  const template = handlebars.compile(htmlString);
+                  const htmlToEmail = template({link: `http://localhost:3000/newpassword/${token}`});
 
                   // fs.readFile(
                   //   'C:/My Apps/api-sosmed/Public/Template/index2.html',
@@ -505,10 +537,10 @@ module.exports = {
 
                   transporter
                     .sendMail({
-                      from: 'myUniverse@mail.com',
+                      from: 'apotakecare@gmail.com',
                       to: email,
                       subject: 'Reset Password',
-                      html: `http://localhost:3000/resetpassword/${token}`,
+                      html: htmlToEmail,
                     })
                     .then((response) => {
                       res.status(200).send({
@@ -625,4 +657,15 @@ module.exports = {
         })
     }
   },
+  
+getTokenUser: (req,res) => {
+  const id = req.dataToken.id 
+  var sql = `Select token from user where id = ${id}`
+  db.query(sql, (err,result) => {
+      if(err) return res.status(500).send({ message: 'Error!', error: err})
+      console.log(result)
+      return res.status(200).json(result)
+  })
+},
+  
 };
