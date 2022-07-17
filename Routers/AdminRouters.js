@@ -16,6 +16,7 @@ Router.post('/loginadmin', AdminController.login)
 // Router.get("/paginate",  jwtVerify, AdminController.pagination);
 Router.post('/addproduct', jwtVerify, AdminController.addProduct) 
 Router.patch('/editproduct', jwtVerify, AdminController.editProduct)
-
+Router.get('/transactioncount', jwtVerify, AdminController.transactionCount);
+Router.get('/transactiondetail', jwtVerify, AdminController.transactionDetail);
 
 module.exports = Router;

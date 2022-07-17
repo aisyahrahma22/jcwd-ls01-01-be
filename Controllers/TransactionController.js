@@ -209,6 +209,8 @@ module.exports = {
             products.forEach(p => {
                 query(query3, [p.namaObat, p.harga, p.gambar, p.quantity, p.satuanObat, p.produkId, transactionId[0].id])
             });
+
+            
             res.status(200).send({error: false, message:'Success!'})
         } catch (error) {
             res.status(500).send({
@@ -245,27 +247,27 @@ module.exports = {
     },
 
     uploadPaymentProof: (req, res) => {
-    const path = 'Public/buktipembayaran';
-    const upload = uploader(path, 'PROOF').fields([{ name: 'image' }]);
+        const path = 'Public/buktipembayaran';
+        const upload = uploader(path, 'PROOF').fields([{ name: 'image' }]);
 
-    upload(req, res, (err) => {
-        if (err) {
-        return res.status(500).json({ message: 'Image upload failed!', error: err.message });
-        }
-        const { image } = req.files;
-        const imagePath = image ? path + '/' + image[0].filename : null;
-        const data = JSON.parse(req.body.data);
-        try {
-            const query1 = `UPDATE transaksi SET bukti_pembayaran = ? WHERE id = ?;`
-            db.query(query1, [imagePath, data.id], (err, result) => {
-            if(err) return res.status(500).send({ message: 'Error!', error: err})
-            return res.status(200).send({error: false, message:'Success!'})
-        })   
-            
-        } catch (err) {
-            console.log(err.message);
-            return res.status(500).json({ message: 'Server Error', error: err });
-        }
-    });
+        upload(req, res, (err) => {
+            if (err) {
+            return res.status(500).json({ message: 'Image upload failed!', error: err.message });
+            }
+            const { image } = req.files;
+            const imagePath = image ? path + '/' + image[0].filename : null;
+            const data = JSON.parse(req.body.data);
+            try {
+                const query1 = `UPDATE transaksi SET bukti_pembayaran = ? WHERE id = ?;`
+                db.query(query1, [imagePath, data.id], (err, result) => {
+                if(err) return res.status(500).send({ message: 'Error!', error: err})
+                return res.status(200).send({error: false, message:'Success!'})
+            })   
+                
+            } catch (err) {
+                console.log(err.message);
+                return res.status(500).json({ message: 'Server Error', error: err });
+            }
+        });
     },
 }

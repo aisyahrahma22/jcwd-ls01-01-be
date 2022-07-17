@@ -94,100 +94,41 @@ module.exports = {
             GolonganObat_id AS golonganObatId
             FROM produk `
 
-            if(category == 'obat-obatan'){query1 += `WHERE KategoriObat_id = 1 `}
-            if(category == 'nutrisi'){query1 += `WHERE KategoriObat_id = 2 `}
-            if(category == 'herbal'){query1 += `WHERE KategoriObat_id = 3 `}
-            if(category == 'vitamin-suplemen'){query1 += `WHERE KategoriObat_id = 4 `}
-            if(category == 'alat-kesehatan'){query1 += `WHERE KategoriObat_id = 5 `}
-            if(category == 'perawatan-tubuh'){query1 += `WHERE KategoriObat_id = 6 `}
-            if(category == 'ibu-anak'){query1 += `WHERE KategoriObat_id = 7 `}
-            
-            if((category === ('semua-kategori' || '')) && (search || keluhan || hargaMin || hargaMax || jenisObat || golonganObat)){
-                query1 += `WHERE `
-            }
-           
-            if(search){
-                if (category !== ('semua-kategori' || '')){
-                    query1 += `AND `
-                }
-                query1 += `nama_obat LIKE '%${search}%' `
-            }
-
-            if(keluhan){
-                if ((category !== ('semua-kategori' || '')) || search){
-                    query1 += `AND `
-                }
-                keluhanString = keluhan.split('-').join(',')
-                query1 += `keluhan_id IN (${keluhanString}) `
-            }
-
-            if(sortBy == 'AZ'){query1 += `ORDER BY namaObat ASC `}
-            if(sortBy == 'ZA'){query1 += `ORDER BY namaObat DESC `}
-            if(sortBy == 'hargaTerendah'){query1 += `ORDER BY harga ASC `}
-            if(sortBy == 'hargaTertinggi'){query1 += `ORDER BY harga DESC `}
-            
-            query1 += `LIMIT ${startIndex},${limit};`
-
-
-            const products = await query(query1)
-
-      if (category == 'obat-obatan') {
-        query1 += `WHERE KategoriObat_id = 1 `;
+      if(category == 'obat-obatan'){query1 += `WHERE KategoriObat_id = 1 `}
+      if(category == 'nutrisi'){query1 += `WHERE KategoriObat_id = 2 `}
+      if(category == 'herbal'){query1 += `WHERE KategoriObat_id = 3 `}
+      if(category == 'vitamin-suplemen'){query1 += `WHERE KategoriObat_id = 4 `}
+      if(category == 'alat-kesehatan'){query1 += `WHERE KategoriObat_id = 5 `}
+      if(category == 'perawatan-tubuh'){query1 += `WHERE KategoriObat_id = 6 `}
+      if(category == 'ibu-anak'){query1 += `WHERE KategoriObat_id = 7 `}
+      
+      if((category === ('semua-kategori' || '')) && (search || keluhan || hargaMin || hargaMax || jenisObat || golonganObat)){
+          query1 += `WHERE `
       }
-      if (category == 'nutrisi') {
-        query1 += `WHERE KategoriObat_id = 2 `;
-      }
-      if (category == 'herbal') {
-        query1 += `WHERE KategoriObat_id = 3 `;
-      }
-      if (category == 'vitamin-suplemen') {
-        query1 += `WHERE KategoriObat_id = 4 `;
-      }
-      if (category == 'alat-kesehatan') {
-        query1 += `WHERE KategoriObat_id = 5 `;
-      }
-      if (category == 'perawatan-tubuh') {
-        query1 += `WHERE KategoriObat_id = 6 `;
-      }
-      if (category == 'ibu-anak') {
-        query1 += `WHERE KategoriObat_id = 7 `;
+      
+      if(search){
+          if (category !== ('semua-kategori' || '')){
+              query1 += `AND `
+          }
+          query1 += `nama_obat LIKE '%${search}%' `
       }
 
-      if (category === ('semua-kategori' || '') && (search || keluhan || hargaMin || hargaMax || jenisObat || golonganObat)) {
-        query1 += `WHERE `;
+      if(keluhan){
+          if ((category !== ('semua-kategori' || '')) || search){
+              query1 += `AND `
+          }
+          keluhanString = keluhan.split('-').join(',')
+          query1 += `keluhan_id IN (${keluhanString}) `
       }
 
-      if (search) {
-        if (category !== ('semua-kategori' || '')) {
-          query1 += `AND `;
-        }
-        query1 += `nama_obat LIKE '%${search}%' `;
-      }
+      if(sortBy == 'AZ'){query1 += `ORDER BY namaObat ASC `}
+      if(sortBy == 'ZA'){query1 += `ORDER BY namaObat DESC `}
+      if(sortBy == 'hargaTerendah'){query1 += `ORDER BY harga ASC `}
+      if(sortBy == 'hargaTertinggi'){query1 += `ORDER BY harga DESC `}
+      
+      query1 += `LIMIT ${startIndex},${limit};`
 
-      if (keluhan) {
-        if (category !== ('semua-kategori' || '') || search) {
-          query1 += `AND `;
-        }
-        keluhanString = keluhan.split('-').join(',');
-        query1 += `keluhan_id in (${keluhanString}) `;
-      }
-
-      if (sortBy == 'AZ') {
-        query1 += `ORDER BY namaObat ASC `;
-      }
-      if (sortBy == 'ZA') {
-        query1 += `ORDER BY namaObat DESC `;
-      }
-      if (sortBy == 'hargaTerendah') {
-        query1 += `ORDER BY harga ASC `;
-      }
-      if (sortBy == 'hargaTertinggi') {
-        query1 += `ORDER BY harga DESC `;
-      }
-
-      query1 += `LIMIT ${startIndex},${limit};`;
-
-      const products = await query(query1);
+      const products = await query(query1)
 
       let query2 = `SELECT satuan_obat AS satuanObat FROM satuanobat WHERE id = ?`;
       for (let i = 0; i < products.length; i++) {
