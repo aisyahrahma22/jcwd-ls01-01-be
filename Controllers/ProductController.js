@@ -152,7 +152,7 @@ try {
           return res.status(500).json({ message: 'Server Error', error: err.message });
         }
 
-        var sql3 = `SELECT * from resep where User_id = ${id};`
+        var sql3 = `UPDATE resep SET Transaksi_id = ${results2.insertId} WHERE User_id = ${id} AND id = ${results.insertId};`
         db.query(sql3, (err3, results3) => {
             console.log('ini results3', results3);
             if (err3) {
@@ -292,11 +292,11 @@ searchProducts: async(req, res) => {
     },
 
     getHomeProduk: (req,res) => { 
-        var sql = `SELECT *,  satuanobat.satuan_obat FROM produk JOIN satuanobat ON produk.SatuanObat_id = satuanobat.id LIMIT 4;`
+        var sql = `SELECT produk.id, produk.nama_obat, produk.harga, produk.diskon, produk.nilai_barang, produk.butuh_resep, produk.gambar, produk.stok, produk.berat, satuanobat.satuan_obat FROM produk JOIN satuanobat ON produk.SatuanObat_id = satuanobat.id LIMIT 4;`
         db.query(sql, (err,result) => {
             if(err) return res.status(500).send({ message: 'Error!', error: err})
 
-            var sql2 = `Select *,  satuanobat.satuan_obat from produk JOIN satuanobat ON produk.SatuanObat_id = satuanobat.id ORDER BY produk.id DESC LIMIT 0, 5;`
+            var sql2 = `SELECT produk.id, produk.nama_obat, produk.harga, produk.diskon, produk.nilai_barang, produk.butuh_resep, produk.gambar, produk.stok, produk.berat, satuanobat.satuan_obat from produk JOIN satuanobat ON produk.SatuanObat_id = satuanobat.id ORDER BY produk.id DESC LIMIT 0, 5;`
             db.query(sql2, (err2,result2) => {
                 if(err2) return res.status(500).send({ message: 'Error!', error: err2})
             
@@ -310,14 +310,78 @@ searchProducts: async(req, res) => {
         })
     },
 
-    getResep: (req,res) => {
-        const id = req.dataToken.id 
-        var sql = `SELECT * from resep WHERE User_id = ${id}`
-        db.query(sql, (err,result) => {
-            if(err) return res.status(500).send({ message: 'Error!', error: err})
+    getResep: async(req, res) => {
+        try {
+            let id = req.dataToken.id
 
-            return res.status(200).json(result)
-        })
+            let query1 = `SELECT resep.id as no_resep, transaksi.id as transaksi_id, resep.gambar_resep, 
+            resep.tgl_pemesanan, transaksi.no_pemesanan from resep 
+            JOIN transaksi ON resep.Transaksi_id = transaksi.id WHERE resep.User_id = ${id} `
+
+            const data = await query(query1)
+            console.log('data', data)
+            
+            let query2 = `SELECT transaksi.statusTransaksi_id as status_transkasi_id, statustransaksi.status_transaksi  
+            FROM transaksi JOIN statustransaksi ON transaksi.statusTransaksi_id = statustransaksi.id 
+            WHERE transaksi.User_id = ${id} and transaksi.id = ?;`
+            for (let i = 0; i < data.length; i++) {
+                let result = await query(query2, data[i].transaksi_id);
+                console.log('result', result)
+                data[i] = { ...data[i], ...result[i]};
+            }
+
+            res.status(200).send(data)
+        } catch (error) {
+            res.status(400).send({
+                status: 400,
+                error: true,
+                message: error.message
+            })
+        }
     },
    
+    deleteResep: async(req, res) => {
+        try {
+            var transaksi_id = parseInt(req.query.id);
+            let id = req.dataToken.id;
+
+            let sql0 = `SELECT * FROM resep WHERE resep.Transaksi_id = ${transaksi_id} `
+            const query0Hasil = await query(sql0)
+            console.log('query0Hasil', query0Hasil)
+
+            let sql = `INSERT INTO riwayat_resep (gambar, tgl_pemesanan, Transaksi_id, User_id, Resep_id, statusTransaksi_id) VALUES ('${query0Hasil[0].gambar_resep}', '${query0Hasil[0].tgl_pemesanan}','${transaksi_id}', '${id}', '${query0Hasil[0].id}', '7');`
+            const queryHasil = await query(sql)
+
+
+            let sql1 = `DELETE FROM resep WHERE resep.Transaksi_id = ${transaksi_id} `
+            const query1Hasil = await query(sql1)
+          
+            let sql2 = `UPDATE transaksi SET statusTransaksi_id = 7 WHERE id = ${transaksi_id};`
+            let query2Hasil = await query(sql2);
+
+            let query1 = `SELECT resep.id as no_resep, transaksi.id as transaksi_id, resep.gambar_resep, 
+            resep.tgl_pemesanan, transaksi.no_pemesanan from resep 
+            JOIN transaksi ON resep.Transaksi_id = transaksi.id WHERE resep.User_id = ${id} `
+
+            const data = await query(query1)
+            console.log('data', data)
+            
+            let query2 = `SELECT transaksi.statusTransaksi_id as status_transkasi_id, statustransaksi.status_transaksi  
+            FROM transaksi JOIN statustransaksi ON transaksi.statusTransaksi_id = statustransaksi.id 
+            WHERE transaksi.User_id = ${id} and transaksi.id = ?;`
+            for (let i = 0; i < data.length; i++) {
+                let result = await query(query2, data[i].transaksi_id);
+                console.log('result', result)
+                data[i] = { ...data[i], ...result[i]};
+            }
+            
+            res.status(200).send(data)
+        } catch (error) {
+            res.status(400).send({
+                status: 400,
+                error: true,
+                message: error.message
+            })
+        }
+    },
 };

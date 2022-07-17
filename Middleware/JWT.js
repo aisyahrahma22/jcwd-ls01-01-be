@@ -2,8 +2,9 @@ const jwt = require('jsonwebtoken')
 require('dotenv').config()
 
 const jwtVerify = (req, res, next) => {
+    console.log('masukk')
     const token = req.headers.authorization
-    console.log(token)
+    console.log('token', token)
 
     if(!token) return res.status(406).send({ error: true, message: 'Token Not Found!' })
 
