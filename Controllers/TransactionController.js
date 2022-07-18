@@ -281,6 +281,7 @@ module.exports = {
             ORDER BY transaksi.id DESC LIMIT ${start},${limit};`
 
             const data = await query(query1)
+            console.log('data', data)
             
             let query2 = `SELECT detailtransaksi.id, detailtransaksi.Produk_id, detailtransaksi.Transaksi_id, detailtransaksi.nama_produk, detailtransaksi.harga_produk, detailtransaksi.quantity, detailtransaksi.satuan_produk, detailtransaksi.gambar_produk 
             FROM detailtransaksi WHERE detailtransaksi.Transaksi_Id = ? ORDER BY id;`
@@ -290,6 +291,21 @@ module.exports = {
                 data[i] = { ...data[i], result, dataPertama};
             }
 
+            let query22 = `SELECT resep.id as no_resep, transaksi.id as transaksi_id, resep.gambar_resep, 
+            resep.tgl_pemesanan, transaksi.no_pemesanan from resep 
+            JOIN transaksi ON resep.Transaksi_id = transaksi.id WHERE resep.Transaksi_id = ?`
+            for (let i = 0; i < data.length; i++) {
+                let result2 = await query(query22, data[i].id);
+                data[i] = { ...data[i], result2};
+            }
+
+            let query23 = `SELECT riwayat_resep.id as no_resep, transaksi.id as transaksi_id, riwayat_resep.gambar, 
+            riwayat_resep.tgl_pemesanan, transaksi.no_pemesanan from riwayat_resep 
+            JOIN transaksi ON riwayat_resep.Transaksi_id = transaksi.id WHERE riwayat_resep.Transaksi_id = ?`
+            for (let i = 0; i < data.length; i++) {
+                let resultRiwayatResep = await query(query23, data[i].id);
+                data[i] = { ...data[i], resultRiwayatResep};
+            }
             
             let query3 = `SELECT COUNT(transaksi.id) as total FROM transaksi WHERE transaksi.User_id = ${id}`;
             for (let i = 0; i < data.length; i++) {
@@ -329,35 +345,61 @@ module.exports = {
             const end = page * limit
 
             let query1 = `SELECT transaksi.id, transaksi.total_pembayaran, transaksi.created_at as tanggal_transaksi, transaksi.waktu_ganti_status, statustransaksi.status_transaksi FROM transaksi 
-            JOIN statustransaksi ON transaksi.statusTransaksi_id = statustransaksi.id WHERE transaksi.User_id = ${id} 
+            JOIN statustransaksi ON transaksi.statusTransaksi_id = statustransaksi.id WHERE transaksi.statusTransaksi_id = 1 OR transaksi.statusTransaksi_id = 2 OR transaksi.statusTransaksi_id = 3 AND transaksi.User_id = ${id} 
             ORDER BY transaksi.id DESC LIMIT ${start},${limit};`
-
             const data = await query(query1)
-            
+            console.log('data', data)
+            for (let i = 0; i < data.length; i++) { 
+                if(data[i].status_transaksi === 'Menunggu Bukti Pembayaran'){
+                    let query23 = `SELECT resep.id, resep.gambar_resep, resep.User_id, resep.Transaksi_id FROM resep WHERE resep.Transaksi_id = ${data[i].id}`
+                    let result23 = await query(query23)
+                    if(result23.length > 0){
+                        let sql = `INSERT INTO riwayat_resep (gambar, tgl_pemesanan, Transaksi_id, User_id, Resep_id, statusTransaksi_id) VALUES ('${result23[0].gambar_resep}', '${result23[0].tgl_pemesanan}','${result23[0].Transaksi_id}', '${result23[0].User_id}', '${result23[0].id}', '2');`
+                        const queryHasil = await query(sql)
+                        let sql1 = `DELETE FROM resep WHERE resep.Transaksi_id = ${result23[0].Transaksi_id} `
+                        const query1Hasil = await query(sql1)
+                    }
+                    
+                }
+            }
+
+            let query5 = `SELECT resep.id as no_resep, transaksi.id as transaksi_id, resep.gambar_resep, resep.tgl_pemesanan, transaksi.no_pemesanan from resep 
+            JOIN transaksi ON resep.Transaksi_id = transaksi.id WHERE resep.Transaksi_id = ?`
+            for (let i = 0; i < data.length; i++) {
+                var resultResep = await query(query5, data[i].id)
+                data[i] = { ...data[i], resultResep};
+               
+            } 
+
             let query2 = `SELECT detailtransaksi.id, detailtransaksi.Produk_id, detailtransaksi.Transaksi_id, detailtransaksi.nama_produk, detailtransaksi.harga_produk, detailtransaksi.quantity, detailtransaksi.satuan_produk, detailtransaksi.gambar_produk 
             FROM detailtransaksi WHERE detailtransaksi.Transaksi_Id = ? ORDER BY id;`
             for (let i = 0; i < data.length; i++) {
                 let result = await query(query2, data[i].id);
                 let dataPertama = result.slice(0,1)
                 data[i] = { ...data[i], result, dataPertama};
-            }
+            } 
 
-            
+            let query22 = `SELECT riwayat_resep.id as no_resep, transaksi.id as transaksi_id, riwayat_resep.gambar, 
+                    riwayat_resep.tgl_pemesanan, transaksi.no_pemesanan from riwayat_resep 
+                    JOIN transaksi ON riwayat_resep.Transaksi_id = transaksi.id WHERE riwayat_resep.Transaksi_id = ?`
+            for (let i = 0; i < data.length; i++) {
+                let resultRiwayatResep = await query(query22, data[i].id);
+                data[i] = { ...data[i], resultRiwayatResep};
+            }
+                    
+           
             let query3 = `SELECT COUNT(transaksi.id) as total FROM transaksi WHERE transaksi.User_id = ${id} AND transaksi.statusTransaksi_id = 1`;
             var total1 = await query(query3)
-            console.log('total', total1)
-
             let query4 = `SELECT COUNT(transaksi.id) as total FROM transaksi WHERE transaksi.User_id = ${id} AND transaksi.statusTransaksi_id = 2`;
             var total2 = await query(query4);
-            console.log('total2', total2)
-
-            let query5 = `SELECT COUNT(transaksi.id) as total FROM transaksi WHERE transaksi.User_id = ${id} AND transaksi.statusTransaksi_id = 3`;
+            let query6 = `SELECT COUNT(transaksi.id) as total FROM transaksi WHERE transaksi.User_id = ${id} AND transaksi.statusTransaksi_id = 3`;
             for (let i = 0; i < data.length; i++) {
-                var total3 = await query(query3);
-                console.log('total3 ', total3 )
+                var total3 = await query(query6);
                 var total = total1[0].total + total2[0].total + total3[0].total
                 data[i] = { ...data[i], total};
             }
+
+            console.log('data bawah', data)
       
             res.status(200).send(data)
         } catch (error) {
@@ -409,14 +451,11 @@ module.exports = {
     getPesananDikirimUser: async(req, res) => {
         try {
             let id = req.dataToken.id
-            const page = parseInt(req.query.page)
-            const limit = parseInt(req.query.limit)
-            const start = (page - 1) * limit
-            const end = page * limit
+           
 
             let query1 = `SELECT transaksi.id, transaksi.total_pembayaran, transaksi.created_at as tanggal_transaksi, transaksi.waktu_ganti_status, statustransaksi.status_transaksi FROM transaksi 
             JOIN statustransaksi ON transaksi.statusTransaksi_id = statustransaksi.id WHERE transaksi.User_id = ${id} AND transaksi.statusTransaksi_id = 5
-            ORDER BY transaksi.id DESC LIMIT ${start},${limit};`
+            ORDER BY transaksi.id DESC;`
 
             const data = await query(query1)
             
@@ -428,7 +467,6 @@ module.exports = {
                 data[i] = { ...data[i], result, dataPertama};
             }
 
-            
             let query3 = `SELECT COUNT(transaksi.id) as total FROM transaksi WHERE transaksi.User_id = ${id} AND transaksi.statusTransaksi_id = 5`;
             for (let i = 0; i < data.length; i++) {
                 let total = await query(query3);
@@ -504,6 +542,14 @@ module.exports = {
                 data[i] = { ...data[i], result, dataPertama};
             }
 
+            let query22 = `SELECT riwayat_resep.id as no_resep, transaksi.id as transaksi_id, riwayat_resep.gambar, 
+            riwayat_resep.tgl_pemesanan, transaksi.no_pemesanan from riwayat_resep 
+            JOIN transaksi ON riwayat_resep.Transaksi_id = transaksi.id WHERE riwayat_resep.Transaksi_id = ?`
+            for (let i = 0; i < data.length; i++) {
+                let result2 = await query(query22, data[i].id);
+                data[i] = { ...data[i], result2};
+            }
+
             
             let query3 = `SELECT COUNT(transaksi.id) as total FROM transaksi WHERE transaksi.User_id = ${id} AND transaksi.statusTransaksi_id = 7`;
             for (let i = 0; i < data.length; i++) {
@@ -512,6 +558,56 @@ module.exports = {
             }
       
             res.status(200).send(data)
+        } catch (error) {
+            res.status(400).send({
+                status: 400,
+                error: true,
+                message: error.message
+            })
+        }
+    },
+    btnPesananDiterima: async(req, res) => {
+        try {
+            var transaksi_id = parseInt(req.query.id);
+            let id = req.dataToken.id;
+            console.log('transaksi_id', transaksi_id)
+            console.log('id', id)
+
+            let sql0 = `SELECT * FROM transaksi WHERE id = ${transaksi_id} `
+            const query0Hasil = await query(sql0)
+            console.log('query0Hasil', query0Hasil)
+
+            if(query0Hasil.length > 0){
+                let sql2 = `UPDATE transaksi SET statusTransaksi_id = 6 WHERE id = ${transaksi_id};`
+                let query2Hasil = await query(sql2);
+                console.log('query2Hasil ', query2Hasil )
+            }
+
+            let query1 = `SELECT transaksi.id, transaksi.total_pembayaran, transaksi.created_at as tanggal_transaksi, transaksi.waktu_ganti_status, statustransaksi.status_transaksi FROM transaksi 
+                JOIN statustransaksi ON transaksi.statusTransaksi_id = statustransaksi.id WHERE transaksi.User_id = ${id} AND transaksi.statusTransaksi_id = 5
+                ORDER BY transaksi.id DESC;`
+    
+                const data = await query(query1)
+                console.log('data', data)
+                
+                let query2 = `SELECT detailtransaksi.id, detailtransaksi.Produk_id, detailtransaksi.Transaksi_id, detailtransaksi.nama_produk, detailtransaksi.harga_produk, detailtransaksi.quantity, detailtransaksi.satuan_produk, detailtransaksi.gambar_produk 
+                FROM detailtransaksi WHERE detailtransaksi.Transaksi_Id = ? ORDER BY id;`
+                for (let i = 0; i < data.length; i++) {
+                    let result = await query(query2, data[i].id);
+                    let dataPertama = result.slice(0,1)
+                    data[i] = { ...data[i], result, dataPertama};
+                }
+    
+                let query3 = `SELECT COUNT(transaksi.id) as total FROM transaksi WHERE transaksi.User_id = ${id} AND transaksi.statusTransaksi_id = 5`;
+                for (let i = 0; i < data.length; i++) {
+                    let total = await query(query3);
+                    data[i] = { ...data[i], total};
+                }
+          
+                res.status(200).send(data)
+          
+
+           
         } catch (error) {
             res.status(400).send({
                 status: 400,

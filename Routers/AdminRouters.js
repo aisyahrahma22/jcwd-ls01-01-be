@@ -19,6 +19,8 @@ Router.patch('/editproduct', jwtVerify, AdminController.editProduct)
 Router.get('/search', AdminController.search);
 Router.get("/paginatestok/:id",  jwtVerify, AdminController.paginationStok);
 Router.get("/gettokenadmin",  jwtVerify, AdminController.getTokenAdmin);
+Router.get("/searchstok/:id",  AdminController.searchKartuStok);
+Router.get("/gethomedata", jwtVerify, AdminController.getDashboardData);
 
 
 module.exports = Router;
