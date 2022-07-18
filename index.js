@@ -13,6 +13,10 @@ const TransactionRouters = require('./Routers/TransactionRouters');
 const AdminRouters = require('./Routers/AdminRouters');
 const RajaOngkir = require('./Routers/RajaOngkirRoute');
 
+app.get("/", (req, res) => {
+  res.status(200).send("<h1>API Backend for Bootcamp Project</h1>");
+});
+
 app.use('/admin', AdminRouters);
 app.use('/user', UserRouters);
 app.use('/product', ProductRouters);
