@@ -21,6 +21,7 @@ Router.get("/paginatestok/:id",  jwtVerify, AdminController.paginationStok);
 Router.get("/gettokenadmin",  jwtVerify, AdminController.getTokenAdmin);
 Router.get('/transactioncount', jwtVerify, AdminController.transactionCount);
 Router.get('/transactiondetail', jwtVerify, AdminController.transactionDetail);
-
+Router.get('/searchtransactionnumber', jwtVerify, AdminController.searchTransactionNumber);
+Router.get('/searchtransactionusername', jwtVerify, AdminController.searchTransactionUsername);
 
 module.exports = Router;
