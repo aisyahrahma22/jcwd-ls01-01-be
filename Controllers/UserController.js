@@ -57,9 +57,7 @@ module.exports = {
             try {
               if (err1) throw err1;
               let emailType = "index.html"
-              console.log('emailType', emailType)
               let filepath = path.resolve(__dirname, `../Public/Template/${emailType}`);
-              console.log('filepath', filepath)
               let htmlString = fs.readFileSync(filepath, "utf-8");
           
               const template = handlebars.compile(htmlString);
@@ -123,10 +121,7 @@ module.exports = {
 
   login: (req, res) => {
     let { account, password } = req.body;
-    console.log({ account, password });
-
     password = crypto.createHmac('sha256', 'abc123').update(password).digest('hex');
-
     let getUserQuery = `select * from user where (email = ${db.escape(account)} or username = ${db.escape(account)}) and password = ${db.escape(password)}`;
 
     db.query(getUserQuery, (err, result) => {
@@ -141,12 +136,12 @@ module.exports = {
           try {
             if (err) throw err;
             db.query('UPDATE user SET token = ?  WHERE id = ?', [token, result[0].id], (err1, result1) => {
-              console.log('result1 user login', result1)
+           
               try {
                 if (err1) throw err1;
                 var sql2 = `SELECT * from user where id = ${result[0].id} ;`
                 db.query(sql2, (err2,result2) => {
-                  console.log('result2 login user', result2)
+                 
                     if(err2) return res.status(500).send({ message: 'Error!', error: err2})
                     return res.status(200).json({
                         error: false,
@@ -158,11 +153,12 @@ module.exports = {
                     })
                 })
               } catch (error) {
-                console.log(error);
+                res.status(500).send(error);
+                
               }
             });
           } catch (error) {
-            console.log(error);
+            res.status(500).send(error);
           }
         });
       } else {
@@ -176,8 +172,7 @@ module.exports = {
   changePassword: (req, res) => {
     let newPassword = req.body.newPassword;
     let oldPassword = req.body.oldPassword;
-    console.log('ni newPasswor', newPassword);
-    console.log('ni oldPasswor', oldPassword);
+  
     let id = req.dataToken.id;
 
     let hashPassword1 = crypto.createHmac('sha256', 'abc123').update(oldPassword).digest('hex');
@@ -187,7 +182,7 @@ module.exports = {
     db.query(`SELECT * FROM user WHERE id = ${id} AND password =  ${db.escape(hashPassword1)}`, (err, result) => {
       try {
         if (err) throw err;
-        console.log('atas', result);
+       
 
         if (result.length === 0) {
           res.status(400).send({
@@ -198,12 +193,11 @@ module.exports = {
           db.query(`UPDATE user SET password =  ${db.escape(hashPassword2)} WHERE id = ${id}`, (err2, result2) => {
             try {
               if (err2) throw err2;
-              console.log('ini result2', result2);
+             
               db.query(`SELECT * FROM user WHERE id = ${id}`, (err3, result3) => {
                 try {
                   if (err3) throw err3;
-                  console.log('ini result3', result3);
-
+                  
                   res.status(200).send({
                     error: false,
                     message: 'Change Password Success!',
@@ -272,7 +266,7 @@ module.exports = {
                 });
               }
             } catch (error) {
-              console.log(error);
+              res.status(500).send(error);
             }
           });
         }
@@ -291,13 +285,14 @@ module.exports = {
       try {
         if (err) throw err;
 
-        console.log(result);
+       
 
         res.status(200).send({
           error: false,
           id: result[0].id,
           username: result[0].username,
           verified: result[0].verified,
+          token: result[0].token,
         });
       } catch (error) {
         res.status(500).send({
@@ -324,9 +319,9 @@ module.exports = {
                 try {
                   if (err1) throw err1;
                   let emailType = "index.html"
-                  console.log('emailType', emailType)
+                 
                   let filepath = path.resolve(__dirname, `../Public/Template/${emailType}`);
-                  console.log('filepath', filepath)
+                 
                   let htmlString = fs.readFileSync(filepath, "utf-8");
               
                   const template = handlebars.compile(htmlString);
@@ -372,7 +367,7 @@ module.exports = {
           });
         }
       } catch (error) {
-        console.log(error);
+        res.status(500).send(error);
       }
     });
   },
@@ -382,7 +377,7 @@ module.exports = {
     var sql = `SELECT * from user where id = ${id};`;
     db.query(sql, (err, results) => {
         if (err) throw err;
-        console.log('err', err)
+        
         if (results.length > 0) {
         const path = 'Public/users';
         const upload = uploader(path, 'USER').fields([{ name: 'image' }]);
@@ -455,7 +450,7 @@ module.exports = {
               }
             });
           } catch (error) {
-            console.log('err', error)
+            
             return res.status(500).json({ message: 'Server Error', error: error.message });
           }
         });
@@ -473,14 +468,13 @@ module.exports = {
   },
   resendPassword: (req, res) => {
     let email = req.body.email;
-    console.log(email);
+   
 
     db.query('SELECT * FROM user WHERE email = ?', email, (err, result) => {
       try {
         if (err) throw err;
 
-        console.log('ini error', err);
-        console.log('ini result', result);
+       
         if (result.length === 1) {
           let email = result[0].email;
           let id = result[0].id;
@@ -494,9 +488,9 @@ module.exports = {
                 try {
                   if (err1) throw err1;
                   let emailType = "index2.html"
-                  console.log('emailType', emailType)
+                 
                   let filepath = path.resolve(__dirname, `../Public/Template/${emailType}`);
-                  console.log('filepath', filepath)
+                 
                   let htmlString = fs.readFileSync(filepath, "utf-8");
               
                   const template = handlebars.compile(htmlString);
@@ -563,17 +557,13 @@ module.exports = {
   },
   resetPassword: (req, res) => {
     let { password } = req.body;
-    console.log(password);
     let id = req.dataToken.id;
-    console.log(id);
     let hashPassword = crypto.createHmac('sha256', 'abc123').update(password).digest('hex');
-    console.log(hashPassword);
-
+   
     db.query('SELECT * FROM user WHERE id = ?', id, (err, result) => {
       try {
         if (err) throw err;
-        console.log('atas', result);
-
+        
         if (result.length === 0) {
           res.status(400).send({
             error: true,
@@ -593,9 +583,7 @@ module.exports = {
                 db.query(`UPDATE user SET password =  ${db.escape(hashPassword)} WHERE id = ${id}`, (err2, result2) => {
                   try {
                     if (err2) throw err2;
-                    console.log('ini err2', err2);
-                    console.log('result2', result2);
-
+                   
                     res.status(200).send({
                       error: false,
                       message: 'Reset Password Success!',
@@ -609,7 +597,10 @@ module.exports = {
                 });
               }
             } catch (error) {
-              console.log(error);
+              res.status(500).send({
+                error: true,
+                message: error.message,
+              });
             }
           });
         }
@@ -641,7 +632,7 @@ getTokenUser: (req,res) => {
   var sql = `Select token from user where id = ${id}`
   db.query(sql, (err,result) => {
       if(err) return res.status(500).send({ message: 'Error!', error: err})
-      console.log(result)
+     
       return res.status(200).json(result)
   })
 },

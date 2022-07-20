@@ -157,7 +157,8 @@ module.exports = {
 
       res.status(200).send(products);
     } catch (error) {
-      console.log(error);
+    
+      res.status(500).send(error);
     }
   },
 
@@ -165,22 +166,11 @@ module.exports = {
     try {
      
       const Id = req.params.id;
-      console.log(Id)
-
       const sql1 = 'DELETE FROM produk WHERE id = ?;';
       let sql1Result = await query(sql1, [Id]);
       
       const sql2 = `Select produk.nama_obat, produk.NIE, produk.stok, produk.harga, produk.nilai_barang, produk.id, golonganobat.golongan_obat, satuanobat.satuan_obat from produk JOIN golonganobat ON produk.GolonganObat_id = golonganobat.id JOIN satuanobat ON produk.SatuanObat_id = satuanobat.id ORDER BY produk.id;`
       let sql2Result = await query(sql2);
-  
-      // var newArray = []
-      // for (let i = 0; i < sql2Result.length; i++) {
-      //     let data = sql2Result[i]
-      //     let newData = data.slice(1, 115)
-      //     newArray.push(newData)
-      // }
-
-      // console.log('newArray ', newArray )
   
       res.status(200).send({
         deleteData: sql1Result,
@@ -189,7 +179,8 @@ module.exports = {
         data: sql2Result 
       });
     } catch (error) {
-      console.log(error.massage);
+      res.status(500).send(error);
+     
     }
   },
 
@@ -198,7 +189,6 @@ module.exports = {
         const path = 'Public/produk/images'; 
         const upload = uploader(path, 'PRODUK').fields([{ name: 'gambar'}]);
         const id = req.dataToken.id
-        console.log('ini id', id)
         upload(req, res, (err) => {
             if(err){
                 return res.status(500).json({ message: 'Uploud Foto Produk Gagal!', error: err.message });
@@ -207,15 +197,14 @@ module.exports = {
             const imagePath = gambar ? path + '/' + gambar[0].filename : null;
             const data = JSON.parse(req.body.data);
             data.gambar = imagePath;
-            console.log('data add data', data)
-
+    
             if(data.nama_obat === "" || data.berat ==="" || data.NIE === "" || data.harga === "" ||  data.nilai_barang === "" ||  data.SatuaObat_id === "" ||  data.GolonganObat_id === "" ||  data.tempat_penyimpanan ==="" ||  data.expired ==="" || data.gambar === null){
               return res.status(500).json({ message: "Semua Data Harus Diisi", error: true }); 
             }
             
             var sql = 'INSERT INTO produk SET ?';
             db.query(sql, data, (err, results) => {
-                console.log('ini results', results)
+               
                 if(err) {
                     fs.unlinkSync('' + imagePath);
                     return res.status(500).json({ message: "Server Error", error: err.message });
@@ -237,13 +226,11 @@ module.exports = {
 },
 editProduct: (req,res) => {
     var produk_id = parseInt(req.query.id);
-    console.log('ini produk_id', produk_id)
     var id = req.dataToken.id
-    console.log('ini id', id)
     
     var sql = `SELECT * from produk where id = ${produk_id};`;
     db.query(sql, (err, results) => {
-      console.log('results edit produk', results)
+     
         if(err) throw err;
         if(results.length > 0) {
             const path = 'Public/produk/images'; 
@@ -257,8 +244,7 @@ editProduct: (req,res) => {
                 const { gambar } = req.files;
                 const imagePath = gambar ? path + '/' + gambar[0].filename : null;
                 const data = JSON.parse(req.body.data);
-                console.log('ini data ', data )
-
+               
                 try {
                     if(imagePath) {
                         data.gambar = imagePath;   
@@ -286,8 +272,7 @@ editProduct: (req,res) => {
 
                                     queryGetStokMasuk = `Select * from detailstokproduk where detailstokproduk.Produk_id = ${produk_id}`;
                                     db.query(queryGetStokMasuk, (err3, results3) => {
-                                        console.log('results3', results3)
-                                        console.log('err3', err3)
+                            
                                         if(err3) {
                                             return res.status(500).json({ message: "Server Error", error: err.message });
                                         }
@@ -324,7 +309,7 @@ editProduct: (req,res) => {
                     })
                 }
                 catch(errors){
-                    console.log('errors.message', errors.message)
+                    
                     return res.status(500).json({ message: "Server Error", error: erros.message });
                 }
             })
@@ -338,7 +323,7 @@ getUnikIDProduct: (req,res) => {
     var sql = `Select produk.*, produk.id as nomerObat, golonganobat.golongan_obat, satuanobat.satuan_obat from produk JOIN golonganobat ON produk.GolonganObat_id = golonganobat.id JOIN satuanobat ON produk.SatuanObat_id = satuanobat.id WHERE produk.id = ${produk_id}`
     db.query(sql, (err,result) => {
         if(err) return res.status(500).send({ message: 'Error!', error: err})
-        console.log(result)
+        
         return res.status(200).json(result)
     })
 },
@@ -513,7 +498,7 @@ getTokenAdmin: (req,res) => {
   var sql = `Select token from admin where id = ${id}`
   db.query(sql, (err,result) => {
       if(err) return res.status(500).send({ message: 'Error!', error: err})
-      console.log(result)
+      
       return res.status(200).json(result)
   })
 },
@@ -522,7 +507,7 @@ getDashboardData: async(req, res) => {
   try {
       let id = req.dataToken.id
       var currentDate = new Date().getDate();
-      console.log(currentDate)
+      
 
       // GET total pesanan hari ini
       let query1 = `SELECT * FROM transaksi WHERE DAY(created_at) = ${currentDate}`;
@@ -581,7 +566,6 @@ getDashboardData: async(req, res) => {
       })
   }
 },
-
 
 }
 

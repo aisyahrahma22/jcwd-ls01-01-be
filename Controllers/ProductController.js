@@ -138,23 +138,21 @@ try {
 
     var sql = `INSERT INTO resep (gambar_resep, User_id) VALUES ('${imagePath}', '${id}');`;
     db.query(sql, (err, results) => {
-      console.log('ini results', results);
-    //   console.log('ini err', results[0].insertId);
-      console.log('ini err', results.insertId);
+   
       if (err) {
         return res.status(500).json({ message: 'Server Error', error: err.message });
       }
 
       var sql2 =`INSERT INTO transaksi (no_pemesanan, User_id, statusTransaksi_id) VALUES ('APTKBBR${results.insertId}', '${id}', "1");`
       db.query(sql2, (err2, results2) => {
-        console.log('ini results2', results2);
+       
         if (err2) {
           return res.status(500).json({ message: 'Server Error', error: err.message });
         }
 
         var sql3 = `UPDATE resep SET Transaksi_id = ${results2.insertId} WHERE User_id = ${id} AND id = ${results.insertId};`
         db.query(sql3, (err3, results3) => {
-            console.log('ini results3', results3);
+           
             if (err3) {
             return res.status(500).json({ message: 'Server Error', error: err.message });
             }
@@ -230,7 +228,7 @@ getRelatedProducts: async(req,res) => {
             const moreProducts = await query(query2, [golonganObatId, id])
             products = [...products, ...moreProducts]
         }
-        console.log(products)
+       
        
         const query3 = `SELECT satuan_obat AS satuanObat FROM satuanobat WHERE id = ?`
         for (let i = 0; i < products.length; i++) {
@@ -319,14 +317,14 @@ searchProducts: async(req, res) => {
             JOIN transaksi ON resep.Transaksi_id = transaksi.id WHERE resep.User_id = ${id} `
 
             const data = await query(query1)
-            console.log('data', data)
+           
             
             let query2 = `SELECT transaksi.statusTransaksi_id as status_transkasi_id, statustransaksi.status_transaksi  
             FROM transaksi JOIN statustransaksi ON transaksi.statusTransaksi_id = statustransaksi.id 
             WHERE transaksi.User_id = ${id} and transaksi.id = ?;`
             for (let i = 0; i < data.length; i++) {
                 let result = await query(query2, data[i].transaksi_id);
-                console.log('result', result)
+                
                 data[i] = { ...data[i], ...result[i]};
             }
 
@@ -347,8 +345,7 @@ searchProducts: async(req, res) => {
 
             let sql0 = `SELECT * FROM resep WHERE resep.Transaksi_id = ${transaksi_id} `
             const query0Hasil = await query(sql0)
-            console.log('query0Hasil', query0Hasil)
-
+           
             let sql = `INSERT INTO riwayat_resep (gambar, tgl_pemesanan, Transaksi_id, User_id, Resep_id, statusTransaksi_id) VALUES ('${query0Hasil[0].gambar_resep}', '${query0Hasil[0].tgl_pemesanan}','${transaksi_id}', '${id}', '${query0Hasil[0].id}', '7');`
             const queryHasil = await query(sql)
 
@@ -364,14 +361,14 @@ searchProducts: async(req, res) => {
             JOIN transaksi ON resep.Transaksi_id = transaksi.id WHERE resep.User_id = ${id} `
 
             const data = await query(query1)
-            console.log('data', data)
+        
             
             let query2 = `SELECT transaksi.statusTransaksi_id as status_transkasi_id, statustransaksi.status_transaksi  
             FROM transaksi JOIN statustransaksi ON transaksi.statusTransaksi_id = statustransaksi.id 
             WHERE transaksi.User_id = ${id} and transaksi.id = ?;`
             for (let i = 0; i < data.length; i++) {
                 let result = await query(query2, data[i].transaksi_id);
-                console.log('result', result)
+            
                 data[i] = { ...data[i], ...result[i]};
             }
             
