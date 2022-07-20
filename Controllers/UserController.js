@@ -242,7 +242,7 @@ module.exports = {
         if (result.length === 0) {
           res.status(400).send({
             error: true,
-            message: 'Id Not Found or Account Already Active',
+            message: 'Id Tidak Ditemukan',
           });
         } else {
           db.query('SELECT token FROM user WHERE token = ?', req.headers.authorization, (err, result) => {
@@ -252,7 +252,7 @@ module.exports = {
               if (result.length === 0) {
                 res.status(400).send({
                   error: true,
-                  message: 'Token Deactived',
+                  message: 'Token Tidak Aktif',
                 });
               } else {
                 db.query('UPDATE user SET verified = 1 WHERE id = ?', id, (err1, result1) => {
@@ -261,7 +261,7 @@ module.exports = {
 
                     res.status(200).send({
                       error: false,
-                      message: 'Your Account Active!',
+                      message: 'Akun Sudah Aktif!',
                     });
                   } catch (error) {
                     res.status(500).send({
@@ -332,38 +332,24 @@ module.exports = {
                   const template = handlebars.compile(htmlString);
                   const htmlToEmail = template({ link: `http://localhost:3000/confirmation/${token}` });
 
-                  transporter
-                    .sendMail({
-                      from: 'apotakecare@mail.com',
-                      to: email,
-                      subject: 'Email Confirmation',
-                      html: htmlToEmail,
-                    })
-                    .then((response) => {
-                      res.status(200).send({
-                        error: false,
-                        message: 'Please Check Email to Verify Your Account!',
-                      });
-                    })
-                    .catch((error) => {
-                      res.status(500).send({
-                        error: false,
-                        message: error.message,
-                      });
+                  transporter.sendMail({
+                    from: 'apotakecare@mail.com',
+                    to: email,
+                    subject: 'Email Confirmation',
+                    html: htmlToEmail,
+                  })
+                  .then((response) => {
+                    res.status(200).send({
+                      error: false,
+                      message: 'Silahkan Check Email Untuk Verifikasi Akun Anda!',
                     });
-                  // fs.readFile(
-                  //   'C:/My Project/jcwd-ls01-01-be/Public/Template/index.html',
-                  //   {
-                  //     encoding: 'utf-8',
-                  //   },
-                  //   (err, file) => {
-                  //     if (err) throw err;
-
-                  //     const newTemplate = handlebars.compile(file);
-                  //     const newTemplateResult = newTemplate({ bebas: email, link: `http://localhost:3000/confirmation/${token}` });
-
-                  //   }
-                  // );
+                  })
+                  .catch((error) => {
+                    res.status(500).send({
+                      error: false,
+                      message: error.message,
+                    });
+                  });
                 } catch (error) {
                   res.status(500).send({
                     error: true,
@@ -381,7 +367,7 @@ module.exports = {
         } else {
           res.status(500).send({
             error: true,
-            message: 'Account Not Found',
+            message: 'Akun Tidak Ditemukan',
           });
         }
       } catch (error) {
@@ -389,30 +375,27 @@ module.exports = {
       }
     });
   },
+
   editProfileData: (req, res) => {
     var id = req.dataToken.id;
-
     var sql = `SELECT * from user where id = ${id};`;
     db.query(sql, (err, results) => {
-      if (err) throw err;
-
-      if (results.length > 0) {
+        if (err) throw err;
+        console.log('err', err)
+        if (results.length > 0) {
         const path = 'Public/users';
         const upload = uploader(path, 'USER').fields([{ name: 'image' }]);
-
-        upload(req, res, (err) => {
-          if (err) {
-            return res.status(500).json({ message: 'Uploud Profile Image Failed !', error: err.message });
+          
+        upload(req, res, (error) => {
+          if (error) {
+            return res.status(500).json({ message: 'Edit Foto Profile Gagal !', error: error.message });
           }
 
           const { image } = req.files;
           const imagePath = image ? path + '/' + image[0].filename : null;
           const data = JSON.parse(req.body.data);
-          console.log('ini imagePath', imagePath);
 
           try {
-            console.log('imagePath after try', imagePath);
-            console.log('results', results);
             if (imagePath) {
               data.profile_picture = imagePath;
             }
@@ -423,61 +406,56 @@ module.exports = {
               data.umur = usia;
             }
 
-            sql = `Update user set ? where id = ${id};`;
-            db.query(sql, data, (err1, results1) => {
-              console.log('ini results1', results1);
-              console.log('ini results', results);
-              console.log('ini err1', err1);
-              if (err1) {
-                console.log('imagePath err1', imagePath);
-                if (imagePath) {
-                  fs.unlinkSync('./Public/users' + imagePath);
-                }
-                return res.status(500).json({ message: 'Server Error', error: err1.message });
+            sql = `SELECT * FROM user WHERE username = ?;` 
+            db.query(sql, data.username, (err3, results3) => {
+              if (err3) {
+              return res.status(500).json({ message: 'Server Error', error: err3.message });
               }
+              if(results3.length > 0){
+                if(results[0].username !== results3[0].username){
+                  return res.status(500).json({ message: 'Username Sudah Dipakai', error: true });
+                }else{
+                  sqlHasil = `Update user set ? where id = ${id};`;
+                  db.query(sqlHasil, data, (err1, results1) => {
+                    if (err1) {
+                      if (imagePath) {
+                        fs.unlinkSync('./Public/users' + imagePath);
+                      }
+                      return res.status(500).json({ message: 'Server Error', error: err1.message });
+                    }
+                    
+                    if (results[0].profile_picture === '' || results[0].profile_picture === null) {
+                      if (imagePath === null) {
+                        data.profile_picture = results[0].profile_picture;
+                      } else {
+                        data.profile_picture = imagePath;
+                      }
+                    } else {
+                      if (!data.profile_picture) {
+                        data.profile_picture = results[0].profile_picture;
+                      } else {
+                        if (data.profile_picture !== results[0].profile_picture) {
+                          fs.unlinkSync('' + results[0].profile_picture);
+                        }
+                      }
+                    }
+                  });
+      
+                  queryHasil = `SELECT * from user where id = ${id}`;
+                  db.query(queryHasil, (err4, results4) => {
+                    if (err4) {
+                      return res.status(500).json({ message: 'Server Error', error: err4.message });
+                    }
+      
+                    return res.status(200).send(results4);
+                  });
+                }
 
-              console.log(' data.profile_picture', data.profile_picture);
-              console.log('resultf before results[0].profile_picture', results);
-              console.log('results[0].profile_picture', results[0].profile_picture);
-              console.log('imagePath bawha', imagePath);
-              // kalo pp nya ga string kosong or null maka ada isinya, jadi harus di update
-              // tanpa menghapus foto di vs code jadi update aja nama filenya
-              // tapi kalau ga ada alias null or string kosong, maka uploud foto ke db dan vs code
-              if (results[0].profile_picture === '' || results[0].profile_picture === null) {
-                if (imagePath === null) {
-                  data.profile_picture = results[0].profile_picture;
-                } else {
-                  // results[0].profile_picture = data.profile_picture
-                  data.profile_picture = imagePath;
-                }
-              } else {
-                if (!data.profile_picture) {
-                  data.profile_picture = results[0].profile_picture;
-                } else {
-                  if (data.profile_picture !== results[0].profile_picture) {
-                    fs.unlinkSync('' + results[0].profile_picture);
-                  }
-                }
               }
-
-              // if(imagePath) {
-              //     fs.unlinkSync('' + results[0].profile_picture);
-              // }
-
-              queryHasil = `SELECT * from user where id = ${id}`;
-              db.query(queryHasil, id, (err4, results4) => {
-                console.log('ini err4', err4);
-                console.log('ini  results4', results4);
-                if (err4) {
-                  return res.status(500).json({ message: 'Server Error', error: err.message });
-                }
-
-                return res.status(200).send(results4);
-              });
             });
-          } catch (err) {
-            console.log(err.message);
-            return res.status(500).json({ message: 'Server Error', error: err.message });
+          } catch (error) {
+            console.log('err', error)
+            return res.status(500).json({ message: 'Server Error', error: error.message });
           }
         });
       }

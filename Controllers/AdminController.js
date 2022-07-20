@@ -38,11 +38,11 @@ module.exports = {
                     if (err) throw err;
                     var sql2 = `UPDATE admin SET token = ?  WHERE id = ?`
                     db.query(sql2,  [token, result[0].id], (err2,result2) => {
-                      console.log('result2 login admin', result2)
+                     
                         if(err2) return res.status(500).send({ message: 'Error!', error: err2})
                         var sql3 = `SELECT * FROM admin WHERE id = ${result[0].id} ;`
                         db.query(sql3, (err3,result3) => {
-                          console.log('result3 login admin', result3)
+                         
                             if(err3) return res.status(500).send({ message: 'Error!', error: err3})
                              res.status(200).json({
                               id: result3[0].id,
@@ -62,13 +62,13 @@ module.exports = {
               } else {
                 res.status(400).send({
                   error: true,
-                  message: 'Incorrect password',
+                  message: 'Password Salah',
                 });
               }
             } else {
               res.status(400).send({
                 error: true,
-                message: 'Account not found',
+                message: 'Email Tidak Ditemukan',
               });
             }
           } catch (error) {
@@ -88,15 +88,13 @@ module.exports = {
                 jwt.sign({ id: result[0].id }, '123abc', (err, token) => {
                   try {
                     if (err) throw err;
-                    console.log('token admin', token)
-                  
                     var sql4 = `UPDATE admin SET token = ?  WHERE id = ?`
                     db.query(sql4,  [token, result[0].id], (err4,result4) => {
-                      console.log('result4 login admin', result4)
+                    
                         if(err4) return res.status(500).send({ message: 'Error!', error: err4})
                         var sql5 = `SELECT * FROM admin WHERE id = ${result[0].id} ;`
                         db.query(sql5, (err5,result5) => {
-                          console.log('result5 login admin', result5)
+                         
                             if(err5) return res.status(500).send({ message: 'Error!', error: err5})
                              res.status(200).json({
                               id: result5[0].id,
@@ -116,13 +114,13 @@ module.exports = {
               } else {
                 res.status(400).send({
                   error: true,
-                  message: 'Incorrect password',
+                  message: 'Password Salah',
                 });
               }
             } else {
               res.status(400).send({
                 error: true,
-                message: 'Account not found',
+                message: 'Username Tidak Ditemukan',
               });
             }
           } catch (error) {
@@ -171,17 +169,24 @@ module.exports = {
 
       const sql1 = 'DELETE FROM produk WHERE id = ?;';
       let sql1Result = await query(sql1, [Id]);
-      console.log('sql1Result', sql1Result)
       
-      const sql2 = `Select produk.*, produk.id as nomerObat, golonganobat.golongan_obat, satuanobat.satuan_obat from produk JOIN golonganobat ON produk.GolonganObat_id = golonganobat.id JOIN satuanobat ON produk.SatuanObat_id = satuanobat.id ORDER BY produk.id;`
+      const sql2 = `Select produk.nama_obat, produk.NIE, produk.stok, produk.harga, produk.nilai_barang, produk.id, golonganobat.golongan_obat, satuanobat.satuan_obat from produk JOIN golonganobat ON produk.GolonganObat_id = golonganobat.id JOIN satuanobat ON produk.SatuanObat_id = satuanobat.id ORDER BY produk.id;`
       let sql2Result = await query(sql2);
-      console.log('sql2Result', sql2Result)
+  
+      // var newArray = []
+      // for (let i = 0; i < sql2Result.length; i++) {
+      //     let data = sql2Result[i]
+      //     let newData = data.slice(1, 115)
+      //     newArray.push(newData)
+      // }
 
+      // console.log('newArray ', newArray )
+  
       res.status(200).send({
         deleteData: sql1Result,
         error: false,
         message: 'Delete Product Success!',
-        data: sql2Result
+        data: sql2Result 
       });
     } catch (error) {
       console.log(error.massage);
@@ -196,7 +201,7 @@ module.exports = {
         console.log('ini id', id)
         upload(req, res, (err) => {
             if(err){
-                return res.status(500).json({ message: 'Add Image Product failed !', error: err.message });
+                return res.status(500).json({ message: 'Uploud Foto Produk Gagal!', error: err.message });
             }
             const { gambar } = req.files;
             const imagePath = gambar ? path + '/' + gambar[0].filename : null;
@@ -205,7 +210,7 @@ module.exports = {
             console.log('data add data', data)
 
             if(data.nama_obat === "" || data.berat ==="" || data.NIE === "" || data.harga === "" ||  data.nilai_barang === "" ||  data.SatuaObat_id === "" ||  data.GolonganObat_id === "" ||  data.tempat_penyimpanan ==="" ||  data.expired ==="" || data.gambar === null){
-              return res.status(500).json({ message: "Fill All Data", error: true }); 
+              return res.status(500).json({ message: "Semua Data Harus Diisi", error: true }); 
             }
             
             var sql = 'INSERT INTO produk SET ?';
@@ -246,7 +251,7 @@ editProduct: (req,res) => {
 
             upload(req, res, (err) => {
                 if(err){
-                    return res.status(500).json({ message: 'Update Product Image Failed !', error: err.message });
+                    return res.status(500).json({ message: 'Update Foto Produk Gagal !', error: err.message });
                 }
 
                 const { gambar } = req.files;
@@ -259,11 +264,11 @@ editProduct: (req,res) => {
                         data.gambar = imagePath;   
                     }
 
-                    console.log('data.stok', data.stok)
+                 
                     if(data.stok){
                         queryStok = `SELECT stok from produk where id = ${produk_id};`
                         db.query(queryStok, (err1, results1) => {
-                            console.log('results1', results1[0].stok)
+                           
                             if(err1) {
                                 return res.status(500).json({ message: "Server Error", error: err.message });
                             }
@@ -271,11 +276,10 @@ editProduct: (req,res) => {
                             if(data.stok > results1[0].stok){
                                 let newDataStokMasuk = data.stok - results1[0].stok
                                 let sisa = results1[0].stok + newDataStokMasuk
-                                console.log('newDataStokMasuk', newDataStokMasuk)
+                               
                                 queryStokMasuk = `INSERT INTO detailstokproduk (keluar, aktivitas, masuk, Produk_id, admin_id, sisa) VALUES (0, "Penerimaan Barang", ${newDataStokMasuk}, ${produk_id}, ${id}, ${sisa});`
                                 db.query(queryStokMasuk, (err2, results2) => {
-                                    console.log('results2', results2)
-                                    console.log('err2', err2)
+                                   
                                     if(err2) {
                                         return res.status(500).json({ message: "Server Error", error: err.message });
                                     }
@@ -328,25 +332,6 @@ editProduct: (req,res) => {
     })
 },
 
-getProduct: (req,res) => {
-    const page = parseInt(req.query.page)
-    const limit = parseInt(req.query.limit)
-    const startIndex = (page - 1) * limit
-    const id = req.dataToken.id 
-    var sql = `Select produk.*, produk.id as nomerObat, golonganobat.golongan_obat, satuanobat.satuan_obat from produk JOIN golonganobat ON produk.GolonganObat_id = golonganobat.id JOIN satuanobat ON produk.SatuanObat_id = satuanobat.id ORDER BY produk.id LIMIT ${startIndex},${limit};`
-    db.query(sql, (err,result) => {
-        if(err) return res.status(500).send({ message: 'Error!', error: err})
-        var sql2 = 'SELECT COUNT(produk.id) as TotalData FROM produk;'
-        db.query(sql2, (err2,result2) => {
-            if(err2) return res.status(500).send({ message: 'Error!', error: err2})
-            return res.status(200).json({
-                result1: result2,
-                result2: result
-            })
-        })
-    })
-},
-
 getUnikIDProduct: (req,res) => {
     var produk_id = parseInt(req.query.id);
     const id = req.dataToken.id 
@@ -365,37 +350,19 @@ pagination: async(req, res) => {
         const start = (page - 1) * limit
         const end = page * limit
 
-        let query1 = `Select produk.*, produk.id as nomerObat, golonganobat.golongan_obat, satuanobat.satuan_obat from produk JOIN golonganobat ON produk.GolonganObat_id = golonganobat.id JOIN satuanobat ON produk.SatuanObat_id = satuanobat.id ORDER BY produk.id LIMIT ${start},${limit};`
+        let query1 = `Select produk.nama_obat, produk.NIE, produk.stok, produk.harga, produk.nilai_barang, produk.id, golonganobat.golongan_obat, satuanobat.satuan_obat from produk JOIN golonganobat ON produk.GolonganObat_id = golonganobat.id JOIN satuanobat ON produk.SatuanObat_id = satuanobat.id ORDER BY produk.id LIMIT ${start},${limit};`
         const findProduk = await query(query1, {
-            attributes: [['id', 'id'], ['nama_obat', 'nama_obat']],
-            order: [['id']],
             limit: limit,
             offset: start
         })
-
+  
         let query2 = 'SELECT COUNT(produk.id) as TotalData FROM produk;'
         const countProduk = await query(query2)
-        console.log('countProduk', countProduk[0].TotalData)
 
         let countFiltered = parseInt(countProduk[0].TotalData)
         let pagination = {}
         pagination.totalRow = countProduk
         pagination.totalPage = Math.ceil(countFiltered/limit)
-        console.log('pagination.totalPage', pagination.totalPage)
-
-        if (end < countFiltered){
-            pagination.next = {
-                page : pagination.totalPage - page,
-                limit
-            }
-        }
-
-        if (start > 0){
-            pagination.prev = {
-                page : page - 1,
-                limit
-            }
-        }
 
         if(findProduk.length == 0){
             throw { message: 'Produk Not Found' }
@@ -418,18 +385,25 @@ pagination: async(req, res) => {
 
 search: async(req, res) => {
   try {
-   
     const data = parseInt(req.query.kategori)
     const nama = req.query.nama
-       
+  
      if(data || nama){
-      db.query(`Select produk.*, produk.id as nomerObat, golonganobat.golongan_obat, satuanobat.satuan_obat from produk JOIN golonganobat ON produk.GolonganObat_id = golonganobat.id JOIN satuanobat ON produk.SatuanObat_id = satuanobat.id WHERE produk.nama_obat LIKE "%${nama}%" AND produk.GolonganObat_id = ${data};`, (err, result) => {
+      db.query(`Select produk.nama_obat, produk.NIE, produk.stok, produk.harga, produk.nilai_barang, produk.id, golonganobat.golongan_obat, satuanobat.satuan_obat from produk JOIN golonganobat ON produk.GolonganObat_id = golonganobat.id JOIN satuanobat ON produk.SatuanObat_id = satuanobat.id WHERE produk.nama_obat LIKE "%${nama}%" AND produk.GolonganObat_id = ${data}`, (err, result) => {
           try {
               if(err) throw err 
+
+              if(result.length < 0){
+                res.status(500).send({
+                  error: true, 
+                  message: 'Data Tidak Ditemukan'
+              })
+              }
               
               res.status(200).send({
                   error: false, 
-                  result: result
+                  result: result,
+                  total: result.length
               })
           } catch (error) {
               res.status(500).send({
@@ -463,14 +437,12 @@ paginationStok: async(req, res) => {
 
       let query2 = `SELECT COUNT(detailstokproduk.id) as TotalData FROM detailstokproduk WHERE detailstokproduk.Produk_id = ${produkId};`
       const countStok = await query(query2)
-      console.log('countStok', countStok[0].TotalData)
-
+   
       let countFiltered = parseInt(countStok[0].TotalData)
       let pagination = {}
       pagination.totalRow = countStok
       pagination.totalPage = Math.ceil(countFiltered/limit)
-      console.log('pagination.totalPage', pagination.totalPage)
-
+   
       let query3 = `SELECT produk.nama_obat from produk WHERE produk.id = ${produkId};`
       const getProdukName = await query(query3)
 
@@ -495,6 +467,47 @@ paginationStok: async(req, res) => {
   }
 }, 
 
+searchKartuStok: async(req, res) => {
+  try {
+    const data = req.query.kategori
+    const bulan = parseInt(req.query.bulan)
+    const tahun = parseInt(req.query.tahun)
+    var produkId = req.params.id;
+
+     if(data || bulan || tahun){
+      db.query(`SELECT detailstokproduk.*, admin.username FROM detailstokproduk 
+      JOIN admin ON detailstokproduk.admin_id=admin.id 
+      WHERE MONTH(detailstokproduk.created_at) = ${bulan} AND YEAR(detailstokproduk.created_at) = ${tahun} AND detailstokproduk.Produk_id = ${produkId} AND detailstokproduk.aktivitas = "${data}"`, (err, result) => {
+          try {
+              if(err) throw err 
+
+              if(result.length < 0){
+                res.status(500).send({
+                  error: true, 
+                  message: 'Data Tidak Ditemukan'
+              })
+              }
+              
+              res.status(200).send({
+                  error: false, 
+                  result: result,
+              })
+          } catch (error) {
+              res.status(500).send({
+                  error: true, 
+                  message: error.message
+              })
+          }
+      })
+     }
+  } catch (error) {
+      res.status(500).send({
+          error: true, 
+          message: error.message
+      })
+  }
+}, 
+
 getTokenAdmin: (req,res) => {
   const id = req.dataToken.id 
   var sql = `Select token from admin where id = ${id}`
@@ -504,6 +517,71 @@ getTokenAdmin: (req,res) => {
       return res.status(200).json(result)
   })
 },
+
+getDashboardData: async(req, res) => {
+  try {
+      let id = req.dataToken.id
+      var currentDate = new Date().getDate();
+      console.log(currentDate)
+
+      // GET total pesanan hari ini
+      let query1 = `SELECT * FROM transaksi WHERE DAY(created_at) = ${currentDate}`;
+      const data = await query(query1)
+      
+      // GET sisa stok hari ini
+      let query2 = `SELECT * FROM detailstokproduk WHERE DAY(created_at) = ${currentDate}`;
+      const stok = await query(query2);
+
+      // GET semua pesanan baru
+      let query3 = `SELECT * FROM transaksi WHERE DAY(created_at) = ${currentDate} AND statusTransaksi_id = 1`;
+      const pesananBaru = await query(query3);
+
+       // GET semua pesanan baru
+       let query03 = `SELECT * FROM transaksi WHERE DAY(created_at) = ${currentDate} AND statusTransaksi_id = 2 `;
+       const pesananBaru2 = await query(query03);
+
+       let query003 = `SELECT * FROM transaksi WHERE DAY(created_at) = ${currentDate} AND statusTransaksi_id = 3 `;
+       const pesananBaru3 = await query(query003);
+ 
+       // GET siap dikirim
+       let query4 = `SELECT * FROM transaksi WHERE DAY(created_at) = ${currentDate} AND statusTransaksi_id = 4 `;
+      const siapKirim = await query(query4);
+
+        // GET sedang dikirim
+        let query5 = `SELECT * FROM transaksi WHERE DAY(created_at) = ${currentDate} AND statusTransaksi_id = 5`;
+        const sedangKirim = await query(query5);
+
+        // GET selesai
+        let query6 = `SELECT * FROM transaksi WHERE DAY(created_at) = ${currentDate} AND statusTransaksi_id = 6`;
+        const selesai = await query(query6);
+
+        // GET dibatalkan
+        let query7 = `SELECT * FROM transaksi WHERE DAY(created_at) = ${currentDate} AND statusTransaksi_id = 7`;
+        const dibatalkan = await query(query7);
+
+        res.status(200).send({
+          status: 200,
+          error: false,
+          message: 'Get Home Data Success',
+          data: data,
+          stok: stok,
+          pesananBaru: pesananBaru,
+          pesananBaru2: pesananBaru2,
+          pesananBaru3: pesananBaru3,
+          siapKirim: siapKirim,
+          sedangKirim: sedangKirim,
+          selesai: selesai,
+          dibatalkan: dibatalkan
+      })
+  } catch (error) {
+      res.status(400).send({
+          status: 400,
+          error: true,
+          message: error.message
+      })
+  }
+},
+
 
 }
 

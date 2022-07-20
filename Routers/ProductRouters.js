@@ -13,5 +13,6 @@ Router.get('/searchproducts', ProductController.searchProducts);
 Router.get('/diskon', ProductController.diskon);
 Router.get('/homeproduk', ProductController.getHomeProduk);
 Router.get('/getresep', jwtVerify, ProductController.getResep);
+Router.delete('/deleteresep', jwtVerify, ProductController.deleteResep);
 
 module.exports = Router;
