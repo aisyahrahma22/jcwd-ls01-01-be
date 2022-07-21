@@ -586,11 +586,11 @@ transactionCount: async(req, res) => {
   try {
     const status = req.query.status
     const transnum = req.query.transnum
-    const username = req.query.username
+    const userIds = req.query.userids
     let startDate = req.query.startDate
     let endDate = req.query.endDate
     const sort = req.query.sort
-    
+
     let query1 = `SELECT COUNT(id) as TotalData FROM transaksi `
     if(status === 'resep-baru'){query1 += `WHERE statusTransaksi_id = 1 `}
     if(status === 'menunggu-bukti-pembayaran'){query1 += `WHERE statusTransaksi_id = 2 `}
@@ -600,11 +600,26 @@ transactionCount: async(req, res) => {
     if(status === 'pesanan-selesai'){query1 += `WHERE statusTransaksi_id = 6 `}
     if(status === 'pesanan-dibatalkan'){query1 += `WHERE statusTransaksi_id = 7 `}
 
-    if((status === ('semua-pesanan' || '')) && (transnum || username || startDate || endDate || sort)){
+    if((status === ('semua-pesanan' || '')) && (transnum || userIds || startDate || endDate)){
       query1 += `WHERE `
     }
-    if(startDate){
+
+    if(transnum){
       if (status !== ('semua-pesanan' || '')){
+          query1 += `AND `
+      }
+      query1 += `no_pemesanan LIKE '%${transnum}%' `
+    }
+    
+    if(userIds){
+      if (status !== ('semua-pesanan' || '') || transnum){
+          query1 += `AND `
+      }
+      query1 += `user_id IN (${userIds}) `
+    }
+    
+    if(startDate){
+      if (status !== ('semua-pesanan' || '') || transnum || userIds){
           query1 += `AND `
       }
       startDate = startDate.split('/').reverse().join('-')
@@ -613,7 +628,6 @@ transactionCount: async(req, res) => {
       endDate = endDate.reverse().join('-')
       query1 += `created_at >='${startDate} 00:00:00' AND created_at <'${endDate} 00:00:00' `
     }
-
 
     const count = await query(query1)
     res.status(200).send(count)
@@ -631,14 +645,14 @@ transactionDetail: async(req, res) => {
     const limit = parseInt(req.query.limit)
     const status = req.query.status
     const transnum = req.query.transnum
-    const username = req.query.username
+    const userIds = req.query.userids
     let startDate = req.query.startDate
     let endDate = req.query.endDate
     const sort = req.query.sort
     const startIndex = (page - 1) * limit
 
     let query1 = `SELECT id, statusTransaksi_id, no_pemesanan, alamat, kabupaten_kota, provinsi,
-                    kurir, User_id, total_pembayaran, created_at FROM transaksi `
+                    kurir, bukti_pembayaran, User_id, total_pembayaran, created_at FROM transaksi `
 
     if(status === 'resep-baru'){query1 += `WHERE statusTransaksi_id = 1 `}
     if(status === 'menunggu-bukti-pembayaran'){query1 += `WHERE statusTransaksi_id = 2 `}
@@ -648,11 +662,26 @@ transactionDetail: async(req, res) => {
     if(status === 'pesanan-selesai'){query1 += `WHERE statusTransaksi_id = 6 `}
     if(status === 'pesanan-dibatalkan'){query1 += `WHERE statusTransaksi_id = 7 `}
 
-    if((status === ('semua-pesanan' || '')) && (username || startDate || endDate || sort)){
+    if((status === ('semua-pesanan' || '')) && (transnum || userIds || startDate || endDate)){
       query1 += `WHERE `
     }
-    if(startDate){
+
+    if(transnum){
       if (status !== ('semua-pesanan' || '')){
+          query1 += `AND `
+      }
+      query1 += `no_pemesanan LIKE '%${transnum}%' `
+    }
+    
+    if(userIds){
+      if (status !== ('semua-pesanan' || '') || transnum){
+          query1 += `AND `
+      }
+      query1 += `user_id IN (${userIds}) `
+    }
+    
+    if(startDate){
+      if (status !== ('semua-pesanan' || '') || transnum || userIds){
           query1 += `AND `
       }
       startDate = startDate.split('/').reverse().join('-')
@@ -660,6 +689,10 @@ transactionDetail: async(req, res) => {
       endDate[0] = Number(endDate[0]) + 1
       endDate = endDate.reverse().join('-')
       query1 += `created_at >='${startDate} 00:00:00' AND created_at <'${endDate} 00:00:00' `
+    }
+
+    if(sort === 'terbaru') {
+      query1 += `ORDER BY id DESC `
     }
 
     query1 += `LIMIT ${startIndex},${limit};`
@@ -699,7 +732,8 @@ searchTransactionNumber: async(req, res) => {
     const no = req.query.no
     let query1 = `SELECT no_pemesanan FROM transaksi WHERE no_pemesanan LIKE '%${no}%' LIMIT 10;`
     const nomorPemesanan = await query(query1)
-    res.status(200).send(nomorPemesanan)
+    const result = nomorPemesanan.map(n => n.no_pemesanan)
+    res.status(200).send(result)
   } catch (error) {
     res.status(500).send({
       error: true, 
@@ -721,7 +755,9 @@ searchTransactionUsername: async(req, res) => {
     };
     let finalUsers = []
     indices.forEach(val => finalUsers.push(users[val]))
-    res.status(200).send(finalUsers)
+    const userIds = finalUsers.map(u => u.id)
+    const usernames = finalUsers.map(u => u.username)
+    res.status(200).send({userIds, usernames})
   } catch (error) {
     res.status(500).send({
       error: true, 

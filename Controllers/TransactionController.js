@@ -194,8 +194,8 @@ module.exports = {
 
             const query1 = `INSERT INTO transaksi (no_pemesanan, label_alamat, nama_depan_penerima,
                 nama_belakang_penerima, no_hp, id_provinsi, provinsi, id_kabupaten_kota,
-                kabupaten_kota, alamat, kode_pos, total_pembayaran, kurir, ongkir, MetodePembayaran_id, User_id)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`
+                kabupaten_kota, alamat, kode_pos, total_pembayaran, kurir, ongkir, MetodePembayaran_id, User_id, statusTransaksi_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 2);`
             await query(query1, [noPemesanan,labelAlamat,namaDepan,namaBelakang,
             noHp,idProvinsi,provinsi,idKabupaten_kota,kabupatenKota,alamat,kodePos,totalPembayaran,
             kurir,ongkir,MetodePembayaranId,userId])
@@ -258,7 +258,7 @@ module.exports = {
             const imagePath = image ? path + '/' + image[0].filename : null;
             const data = JSON.parse(req.body.data);
             try {
-                const query1 = `UPDATE transaksi SET bukti_pembayaran = ? WHERE id = ?;`
+                const query1 = `UPDATE transaksi SET bukti_pembayaran = ?, statusTransaksi_id = 3 WHERE id = ?;`
                 db.query(query1, [imagePath, data.id], (err, result) => {
                 if(err) return res.status(500).send({ message: 'Error!', error: err})
                 return res.status(200).send({error: false, message:'Success!'})
