@@ -8,7 +8,7 @@ const transporter = require('../Helpers/Transporter');
 const fs = require('fs');
 const handlebars = require('handlebars');
 const jwt = require('jsonwebtoken');
-const path = require("path");
+const path = require('path');
 
 module.exports = {
   register: async (req, res) => {
@@ -59,9 +59,8 @@ module.exports = {
               let emailType = "index.html"
               let filepath = path.resolve(__dirname, `../Public/Template/${emailType}`);
               let htmlString = fs.readFileSync(filepath, "utf-8");
-          
               const template = handlebars.compile(htmlString);
-              const htmlToEmail = template({link: `http://localhost:3000/confirmation/${token}`});
+              const htmlToEmail = template({ link: `http://localhost:3000/confirmation/${token}` });
 
               // Step5.1. Send Email Confirmation
 
@@ -136,7 +135,6 @@ module.exports = {
           try {
             if (err) throw err;
             db.query('UPDATE user SET token = ?  WHERE id = ?', [token, result[0].id], (err1, result1) => {
-           
               try {
                 if (err1) throw err1;
                 var sql2 = `SELECT * from user where id = ${result[0].id} ;`
@@ -152,6 +150,7 @@ module.exports = {
                         verified: result2[0].verified,
                     })
                 })
+
               } catch (error) {
                 res.status(500).send(error);
                 
@@ -323,12 +322,11 @@ module.exports = {
                   let filepath = path.resolve(__dirname, `../Public/Template/${emailType}`);
                  
                   let htmlString = fs.readFileSync(filepath, "utf-8");
-              
+         
                   const template = handlebars.compile(htmlString);
-                  const htmlToEmail = template({link: `http://localhost:3000/confirmation/${token}`});
+                  const htmlToEmail = template({ link: `http://localhost:3000/confirmation/${token}` });
 
-                  transporter
-                  .sendMail({
+                  transporter.sendMail({
                     from: 'apotakecare@mail.com',
                     to: email,
                     subject: 'Email Confirmation',
@@ -487,14 +485,15 @@ module.exports = {
               db.query(query3, [token, id], (err1, result1) => {
                 try {
                   if (err1) throw err1;
+
                   let emailType = "index2.html"
                  
                   let filepath = path.resolve(__dirname, `../Public/Template/${emailType}`);
                  
                   let htmlString = fs.readFileSync(filepath, "utf-8");
-              
+
                   const template = handlebars.compile(htmlString);
-                  const htmlToEmail = template({link: `http://localhost:3000/newpassword/${token}`});
+                  const htmlToEmail = template({ link: `http://localhost:3000/newpassword/${token}` });
 
                   // fs.readFile(
                   //   'C:/My Apps/api-sosmed/Public/Template/index2.html',
@@ -612,18 +611,18 @@ module.exports = {
       }
     });
   },
-  getAddress: async(req,res) => {
+  getAddress: async (req, res) => {
     try {
-        const id = req.dataToken.id 
-        const query1 = `SELECT * FROM alamat WHERE User_id = ?`
-        let addresses = await query(query1, id)
-        res.status(200).send(addresses)
+      const id = req.dataToken.id;
+      const query1 = `SELECT * FROM alamat WHERE User_id = ?`;
+      let addresses = await query(query1, id);
+      res.status(200).send(addresses);
     } catch (error) {
-        res.status(500).send({
-            status: 500,
-            error: true,
-            message: error.message
-        })
+      res.status(500).send({
+        status: 500,
+        error: true,
+        message: error.message,
+      });
     }
   },
   
@@ -637,4 +636,24 @@ getTokenUser: (req,res) => {
   })
 },
   
+  addAddress: async (req, res) => {
+    try {
+      const { labelAlamat, namaDepan, namaBelakang, noHp, idProvinsi, provinsi, idKabupaten_kota, kabupatenKota, alamat, kodePos, alamatUtama } = req.body.dataAlamat;
+      const userId = req.dataToken.id;
+
+      const query1 = `INSERT INTO alamat (label_alamat, nama_depan_penerima,
+            nama_belakang_penerima, no_hp, id_provinsi, provinsi, id_kabupaten_kota,
+            kabupaten_kota, alamat, kode_pos, alamat_utama, User_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?);`;
+      await query(query1, [labelAlamat, namaDepan, namaBelakang, noHp, idProvinsi, provinsi, idKabupaten_kota, kabupatenKota, alamat, kodePos, alamatUtama, userId]);
+      res.status(200).send({ error: false, message: 'Success!' });
+    } catch (error) {
+      res.status(500).send({
+        status: 500,
+        error: true,
+        message: error.message,
+      });
+    }
+  },
+
 };
