@@ -270,11 +270,15 @@ module.exports = {
     },
     getSemuaPesananUser: async(req, res) => {
       try {
-          let id = req.dataToken.id
+        let id = req.dataToken.id
+        const page = parseInt(req.query.page)
+        const limit = parseInt(req.query.limit)
+        const start = (page - 1) * limit
+        const end = page * limit
         
           let query1 = `SELECT transaksi.id, transaksi.total_pembayaran, transaksi.created_at as tanggal_transaksi, transaksi.waktu_ganti_status, statustransaksi.status_transaksi FROM transaksi 
           JOIN statustransaksi ON transaksi.statusTransaksi_id = statustransaksi.id WHERE transaksi.User_id = ${id} 
-          ORDER BY transaksi.id DESC;`
+          ORDER BY transaksi.id DESC LIMIT ${start},${limit};`
 
           const data = await query(query1)
           
@@ -341,8 +345,8 @@ module.exports = {
             const end = page * limit
 
             let query1 = `SELECT transaksi.id, transaksi.total_pembayaran, transaksi.created_at as tanggal_transaksi, transaksi.waktu_ganti_status, statustransaksi.status_transaksi FROM transaksi 
-            JOIN statustransaksi ON transaksi.statusTransaksi_id = statustransaksi.id WHERE transaksi.statusTransaksi_id = 1 OR transaksi.statusTransaksi_id = 2 OR transaksi.statusTransaksi_id = 3 AND transaksi.User_id = ${id} 
-            ORDER BY transaksi.id DESC LIMIT ${start},${limit};`
+            JOIN statustransaksi ON transaksi.statusTransaksi_id = statustransaksi.id WHERE NOT transaksi.statusTransaksi_id = 7 AND NOT transaksi.statusTransaksi_id = 6 AND NOT transaksi.statusTransaksi_id = 5 AND NOT transaksi.statusTransaksi_id = 4 AND
+            transaksi.User_id = ${id} ORDER BY transaksi.id DESC LIMIT ${start},${limit};`
             const data = await query(query1)
             console.log('data', data)
             for (let i = 0; i < data.length; i++) { 
