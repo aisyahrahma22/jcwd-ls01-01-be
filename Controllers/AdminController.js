@@ -713,11 +713,18 @@ transactionDetail: async(req, res) => {
 
     const query4 = `SELECT gambar_resep FROM resep WHERE Transaksi_id = ?`
     for (let i = 0; i < transaksi.length; i++) {
-        if(transaksi[i].statusTransaksi_id == 1){
+        if(transaksi[i].no_pemesanan.includes('RSP')){
           let gambar = await query(query4, transaksi[i].id)
           transaksi[i] = { ...transaksi[i], gambarResep: gambar[0].gambar_resep}
         }
     }
+
+    for (let i = 0; i < transaksi.length; i++) {
+      let date = new Date(transaksi[i].created_at)
+      date.setHours(date.getHours() + 7)
+      transaksi[i] = { ...transaksi[i], created_at: date}
+    }
+
     res.status(200).send(transaksi)
   } catch (error) {
     res.status(500).send({
@@ -764,5 +771,36 @@ searchTransactionUsername: async(req, res) => {
       message: error.message
     })
   }
-}
+},
+
+cancelTransaction: async(req, res) => {
+  try {
+    const id = req.body.id
+    query1 = `UPDATE transaksi SET statusTransaksi_id = 7  WHERE id = ?`
+    await query(query1, id)
+    res.status(200).send({error: false, message: 'success!'})
+  } catch (error) {
+    res.status(500).send({
+      error: true, 
+      message: error.message
+    })
+  }
+},
+
+continueTransaction: async(req, res) => {
+  try {
+    const id = req.body.id
+    query1 = `SELECT statusTransaksi_id FROM transaksi WHERE id = ?`
+    let status = await query(query1, id)
+    status = Number(status[0].statusTransaksi_id) + 1
+    query2 = `UPDATE transaksi SET statusTransaksi_id = ?  WHERE id = ?`
+    await query(query2, [status, id])
+    res.status(200).send({error: false, message: 'success!'})
+  } catch (error) {
+    res.status(500).send({
+      error: true, 
+      message: error.message
+    })
+  }
+},
 };

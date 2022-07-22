@@ -25,5 +25,7 @@ Router.get('/transactioncount', jwtVerify, AdminController.transactionCount);
 Router.get('/transactiondetail', jwtVerify, AdminController.transactionDetail);
 Router.get('/searchtransactionnumber', jwtVerify, AdminController.searchTransactionNumber);
 Router.get('/searchtransactionusername', jwtVerify, AdminController.searchTransactionUsername);
+Router.patch('/canceltransaction', jwtVerify, AdminController.cancelTransaction);
+Router.patch('/continuetransaction', jwtVerify, AdminController.continueTransaction);
 
 module.exports = Router;

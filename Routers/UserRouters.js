@@ -17,6 +17,7 @@ Router.get('/datauser', jwtVerify, UserController.getUsers);
 Router.post('/resendpassword', UserController.resendPassword);
 Router.patch('/resetpassword', jwtVerify, UserController.resetPassword);
 Router.get('/getaddress', jwtVerify, UserController.getAddress);
-Router.get('/gettokenuser', jwtVerify, UserController.getTokenUser)
+Router.post('/addaddress', jwtVerify, UserController.addAddress);
+Router.get('/gettokenuser', jwtVerify, UserController.getTokenUser);
 
 module.exports = Router;

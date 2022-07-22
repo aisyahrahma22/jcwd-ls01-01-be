@@ -144,7 +144,7 @@ try {
         return res.status(500).json({ message: 'Server Error', error: err.message });
       }
 
-      var sql2 =`INSERT INTO transaksi (no_pemesanan, User_id, statusTransaksi_id) VALUES ('APTKBBR${results.insertId}', '${id}', "1");`
+      var sql2 =`INSERT INTO transaksi (no_pemesanan, User_id, statusTransaksi_id) VALUES ('APTKRSP${results.insertId}', '${id}', "1");`
       db.query(sql2, (err2, results2) => {
         console.log('ini results2', results2);
         if (err2) {
