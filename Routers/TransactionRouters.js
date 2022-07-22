@@ -21,8 +21,9 @@ Router.get('/getdiprosespesanan', jwtVerify, TransactionController.getPesananDip
 Router.get('/getdikirimpesanan', jwtVerify, TransactionController.getPesananDikirimUser);
 Router.get('/getselesaipesanan', jwtVerify, TransactionController.getPesananSelesaiUser);
 Router.get('/getdibatalkanpesanan', jwtVerify, TransactionController.getPesananDibatalkanUser);
-Router.patch('/pesananditerima',  jwtVerify, TransactionController.btnPesananDiterima);
+Router.patch('/pesananditerima', TransactionController.btnPesananDiterima);
 Router.get('/getdetailpesanan', TransactionController.getDetailProdukPesanan);
+Router.patch('/pesananditerima2', TransactionController.btnPesananDiterima2);
 
 
 // set transaksi
