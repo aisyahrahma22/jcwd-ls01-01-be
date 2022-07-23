@@ -97,8 +97,6 @@ module.exports = {
                     message: error.message,
                   });
                 });
-              // }
-              // );
             } catch (error) {
               res.status(500).send({
                 error: true,
@@ -136,7 +134,7 @@ module.exports = {
         });
       }
 
-      if (result.length === 1) {
+      if (result.length == 1) {
         jwt.sign({ id: result[0].id }, '123abc', (err, token) => {
           try {
             if (err) throw err;
@@ -332,24 +330,25 @@ module.exports = {
                   const template = handlebars.compile(htmlString);
                   const htmlToEmail = template({ link: `http://localhost:3000/confirmation/${token}` });
 
-                  transporter.sendMail({
-                    from: 'apotakecare@mail.com',
-                    to: email,
-                    subject: 'Email Confirmation',
-                    html: htmlToEmail,
-                  })
-                  .then((response) => {
-                    res.status(200).send({
-                      error: false,
-                      message: 'Silahkan Check Email Untuk Verifikasi Akun Anda!',
+                  transporter
+                    .sendMail({
+                      from: 'apotakecare@mail.com',
+                      to: email,
+                      subject: 'Email Confirmation',
+                      html: htmlToEmail,
+                    })
+                    .then((response) => {
+                      res.status(200).send({
+                        error: false,
+                        message: 'Silahkan Check Email Untuk Verifikasi Akun Anda!',
+                      });
+                    })
+                    .catch((error) => {
+                      res.status(500).send({
+                        error: false,
+                        message: error.message,
+                      });
                     });
-                  })
-                  .catch((error) => {
-                    res.status(500).send({
-                      error: false,
-                      message: error.message,
-                    });
-                  });
                 } catch (error) {
                   res.status(500).send({
                     error: true,
@@ -380,12 +379,12 @@ module.exports = {
     var id = req.dataToken.id;
     var sql = `SELECT * from user where id = ${id};`;
     db.query(sql, (err, results) => {
-        if (err) throw err;
-        console.log('err', err)
-        if (results.length > 0) {
+      if (err) throw err;
+      console.log('err', err);
+      if (results.length > 0) {
         const path = 'Public/users';
         const upload = uploader(path, 'USER').fields([{ name: 'image' }]);
-          
+
         upload(req, res, (error) => {
           if (error) {
             return res.status(500).json({ message: 'Edit Foto Profile Gagal !', error: error.message });
@@ -406,15 +405,15 @@ module.exports = {
               data.umur = usia;
             }
 
-            sql = `SELECT * FROM user WHERE username = ?;` 
+            sql = `SELECT * FROM user WHERE username = ?;`;
             db.query(sql, data.username, (err3, results3) => {
               if (err3) {
-              return res.status(500).json({ message: 'Server Error', error: err3.message });
+                return res.status(500).json({ message: 'Server Error', error: err3.message });
               }
-              if(results3.length > 0){
-                if(results[0].username !== results3[0].username){
+              if (results3.length > 0) {
+                if (results[0].username !== results3[0].username) {
                   return res.status(500).json({ message: 'Username Sudah Dipakai', error: true });
-                }else{
+                } else {
                   sqlHasil = `Update user set ? where id = ${id};`;
                   db.query(sqlHasil, data, (err1, results1) => {
                     if (err1) {
@@ -423,7 +422,7 @@ module.exports = {
                       }
                       return res.status(500).json({ message: 'Server Error', error: err1.message });
                     }
-                    
+
                     if (results[0].profile_picture === '' || results[0].profile_picture === null) {
                       if (imagePath === null) {
                         data.profile_picture = results[0].profile_picture;
@@ -440,21 +439,20 @@ module.exports = {
                       }
                     }
                   });
-      
+
                   queryHasil = `SELECT * from user where id = ${id}`;
                   db.query(queryHasil, (err4, results4) => {
                     if (err4) {
                       return res.status(500).json({ message: 'Server Error', error: err4.message });
                     }
-      
+
                     return res.status(200).send(results4);
                   });
                 }
-
               }
             });
           } catch (error) {
-            console.log('err', error)
+            console.log('err', error);
             return res.status(500).json({ message: 'Server Error', error: error.message });
           }
         });
@@ -500,17 +498,6 @@ module.exports = {
 
                   const template = handlebars.compile(htmlString);
                   const htmlToEmail = template({ link: `http://localhost:3000/newpassword/${token}` });
-
-                  // fs.readFile(
-                  //   'C:/My Apps/api-sosmed/Public/Template/index2.html',
-                  //   {
-                  //     encoding: 'utf-8',
-                  //   },
-                  //   (err, file) => {
-                  //     if (err) throw err;
-
-                  //     const newTemplate = handlebars.compile(file);
-                  //     const newTemplateResult = newTemplate({ bebas: email, link: `http://localhost:3000/resetpassword/${token}` });
 
                   transporter
                     .sendMail({
@@ -638,12 +625,18 @@ module.exports = {
     try {
       const { labelAlamat, namaDepan, namaBelakang, noHp, idProvinsi, provinsi, idKabupaten_kota, kabupatenKota, alamat, kodePos, alamatUtama } = req.body.dataAlamat;
       const userId = req.dataToken.id;
+      if (alamatUtama == '1') {
+        const query1 = `UPDATE alamat SET alamat_utama = 0 WHERE User_id = ? AND alamat_utama = 1 `;
+        await query(query1, userId);
+      }
 
-      const query1 = `INSERT INTO alamat (label_alamat, nama_depan_penerima,
+      const query2 = `INSERT INTO alamat (label_alamat, nama_depan_penerima,
             nama_belakang_penerima, no_hp, id_provinsi, provinsi, id_kabupaten_kota,
             kabupaten_kota, alamat, kode_pos, alamat_utama, User_id)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?);`;
-      await query(query1, [labelAlamat, namaDepan, namaBelakang, noHp, idProvinsi, provinsi, idKabupaten_kota, kabupatenKota, alamat, kodePos, alamatUtama, userId]);
+
+      await query(query2, [labelAlamat, namaDepan, namaBelakang, noHp, idProvinsi, provinsi, idKabupaten_kota, kabupatenKota, alamat, kodePos, alamatUtama, userId]);
+
       res.status(200).send({ error: false, message: 'Success!' });
     } catch (error) {
       res.status(500).send({
