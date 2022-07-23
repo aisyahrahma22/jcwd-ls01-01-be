@@ -134,6 +134,7 @@ module.exports = {
         });
       }
 
+
       if (result.length == 1) {
         jwt.sign({ id: result[0].id }, '123abc', (err, token) => {
           try {
