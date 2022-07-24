@@ -350,7 +350,7 @@ module.exports = {
             const data = await query(query1)
             console.log('data', data)
             for (let i = 0; i < data.length; i++) { 
-                if(data[i].status_transaksi === 'Menunggu Bukti Pembayaran'){
+                if(data[i].status_transaksi === 'Menunggu Checkout'){
                     let query23 = `SELECT resep.id, resep.gambar_resep, resep.User_id, resep.Transaksi_id FROM resep WHERE resep.Transaksi_id = ${data[i].id}`
                     let result23 = await query(query23)
                     if(result23.length > 0){
@@ -452,7 +452,6 @@ module.exports = {
         try {
             let id = req.dataToken.id
            
-
             let query1 = `SELECT transaksi.id, transaksi.total_pembayaran, transaksi.created_at as tanggal_transaksi, transaksi.waktu_ganti_status, statustransaksi.status_transaksi FROM transaksi 
             JOIN statustransaksi ON transaksi.statusTransaksi_id = statustransaksi.id WHERE transaksi.User_id = ${id} AND transaksi.statusTransaksi_id = 5
             ORDER BY transaksi.id DESC;`
@@ -569,9 +568,6 @@ module.exports = {
     btnPesananDiterima: async(req, res) => {
         try {
             var transaksi_id = parseInt(req.query.id);
-            let id = req.dataToken.id;
-            console.log('transaksi_id', transaksi_id)
-            console.log('id', id)
 
             let sql0 = `SELECT * FROM transaksi WHERE id = ${transaksi_id} `
             const query0Hasil = await query(sql0)
@@ -584,7 +580,7 @@ module.exports = {
             }
 
             let query1 = `SELECT transaksi.id, transaksi.total_pembayaran, transaksi.created_at as tanggal_transaksi, transaksi.waktu_ganti_status, statustransaksi.status_transaksi FROM transaksi 
-                JOIN statustransaksi ON transaksi.statusTransaksi_id = statustransaksi.id WHERE transaksi.User_id = ${id} AND transaksi.statusTransaksi_id = 5
+                JOIN statustransaksi ON transaksi.statusTransaksi_id = statustransaksi.id WHERE transaksi.User_id = ${query0Hasil[0].User_id} AND transaksi.statusTransaksi_id = 5
                 ORDER BY transaksi.id DESC;`
     
                 const data = await query(query1)
@@ -598,7 +594,7 @@ module.exports = {
                     data[i] = { ...data[i], result, dataPertama};
                 }
     
-                let query3 = `SELECT COUNT(transaksi.id) as total FROM transaksi WHERE transaksi.User_id = ${id} AND transaksi.statusTransaksi_id = 5`;
+                let query3 = `SELECT COUNT(transaksi.id) as total FROM transaksi WHERE transaksi.User_id = ${query0Hasil[0].User_id} AND transaksi.statusTransaksi_id = 5`;
                 for (let i = 0; i < data.length; i++) {
                     let total = await query(query3);
                     data[i] = { ...data[i], total};
