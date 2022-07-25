@@ -21,6 +21,13 @@ Router.get("/paginatestok/:id",  jwtVerify, AdminController.paginationStok);
 Router.get("/gettokenadmin",  jwtVerify, AdminController.getTokenAdmin);
 Router.get("/searchstok/:id",  AdminController.searchKartuStok);
 Router.get("/gethomedata", jwtVerify, AdminController.getDashboardData);
-
+Router.get('/transactioncount', jwtVerify, AdminController.transactionCount);
+Router.get('/transactiondetail', jwtVerify, AdminController.transactionDetail);
+Router.get('/searchtransactionnumber', jwtVerify, AdminController.searchTransactionNumber);
+Router.get('/searchtransactionusername', jwtVerify, AdminController.searchTransactionUsername);
+Router.patch('/canceltransaction', jwtVerify, AdminController.cancelTransaction);
+Router.patch('/continuetransaction', jwtVerify, AdminController.continueTransaction);
+Router.post('/salinresep', jwtVerify, AdminController.salinResep);
+Router.post('/reducestock', jwtVerify, AdminController.reduceStock);
 
 module.exports = Router;

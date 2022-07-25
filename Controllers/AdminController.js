@@ -586,6 +586,282 @@ getDashboardData: async(req, res) => {
   }
 },
 
+transactionCount: async(req, res) => {
+  try {
+    const status = req.query.status
+    const transnum = req.query.transnum
+    const userIds = req.query.userids
+    let startDate = req.query.startDate
+    let endDate = req.query.endDate
+    const sort = req.query.sort
 
-}
+    let query1 = `SELECT COUNT(id) as TotalData FROM transaksi `
+    if(status === 'resep-baru'){query1 += `WHERE statusTransaksi_id = 1 `}
+    if(status === 'menunggu-bukti-pembayaran'){query1 += `WHERE statusTransaksi_id = 2 `}
+    if(status === 'cek-bukti-pembayaran'){query1 += `WHERE statusTransaksi_id = 3 `}
+    if(status === 'pesanan-diproses'){query1 += `WHERE statusTransaksi_id = 4 `}
+    if(status === 'dalam-pengiriman'){query1 += `WHERE statusTransaksi_id = 5 `}
+    if(status === 'pesanan-selesai'){query1 += `WHERE statusTransaksi_id = 6 `}
+    if(status === 'pesanan-dibatalkan'){query1 += `WHERE statusTransaksi_id = 7 `}
+    if(status === 'menunggu-checkout'){query1 += `WHERE statusTransaksi_id = 8 `}
 
+    if((status === ('semua-pesanan' || '')) && (transnum || userIds || startDate || endDate)){
+      query1 += `WHERE `
+    }
+
+    if(transnum){
+      if (status !== ('semua-pesanan' || '')){
+          query1 += `AND `
+      }
+      query1 += `no_pemesanan LIKE '%${transnum}%' `
+    }
+    
+    if(userIds){
+      if (status !== ('semua-pesanan' || '') || transnum){
+          query1 += `AND `
+      }
+      query1 += `user_id IN (${userIds}) `
+    }
+    
+    if(startDate){
+      if (status !== ('semua-pesanan' || '') || transnum || userIds){
+          query1 += `AND `
+      }
+      startDate = startDate.split('/').reverse().join('-')
+      endDate = (endDate.split('/'))
+      endDate[0] = Number(endDate[0]) + 1
+      endDate = endDate.reverse().join('-')
+      query1 += `created_at >='${startDate} 00:00:00' AND created_at <'${endDate} 00:00:00' `
+    }
+
+    const count = await query(query1)
+    res.status(200).send(count)
+  } catch (error) {
+    res.status(500).send({
+      error: true, 
+      message: error.message
+    })
+  }
+},
+
+transactionDetail: async(req, res) => {
+  try {
+    const page = parseInt(req.query.page)
+    const limit = parseInt(req.query.limit)
+    const status = req.query.status
+    const transnum = req.query.transnum
+    const userIds = req.query.userids
+    let startDate = req.query.startDate
+    let endDate = req.query.endDate
+    const sort = req.query.sort
+    const startIndex = (page - 1) * limit
+
+    let query1 = `SELECT id, statusTransaksi_id, no_pemesanan, alamat, kabupaten_kota, provinsi,
+                    kurir, bukti_pembayaran, User_id, total_pembayaran, created_at FROM transaksi `
+
+    if(status === 'resep-baru'){query1 += `WHERE statusTransaksi_id = 1 `}
+    if(status === 'menunggu-bukti-pembayaran'){query1 += `WHERE statusTransaksi_id = 2 `}
+    if(status === 'cek-bukti-pembayaran'){query1 += `WHERE statusTransaksi_id = 3 `}
+    if(status === 'pesanan-diproses'){query1 += `WHERE statusTransaksi_id = 4 `}
+    if(status === 'dalam-pengiriman'){query1 += `WHERE statusTransaksi_id = 5 `}
+    if(status === 'pesanan-selesai'){query1 += `WHERE statusTransaksi_id = 6 `}
+    if(status === 'pesanan-dibatalkan'){query1 += `WHERE statusTransaksi_id = 7 `}
+    if(status === 'menunggu-checkout'){query1 += `WHERE statusTransaksi_id = 8 `}
+
+    if((status === ('semua-pesanan' || '')) && (transnum || userIds || startDate || endDate)){
+      query1 += `WHERE `
+    }
+
+    if(transnum){
+      if (status !== ('semua-pesanan' || '')){
+          query1 += `AND `
+      }
+      query1 += `no_pemesanan LIKE '%${transnum}%' `
+    }
+    
+    if(userIds){
+      if (status !== ('semua-pesanan' || '') || transnum){
+          query1 += `AND `
+      }
+      query1 += `user_id IN (${userIds}) `
+    }
+    
+    if(startDate){
+      if (status !== ('semua-pesanan' || '') || transnum || userIds){
+          query1 += `AND `
+      }
+      startDate = startDate.split('/').reverse().join('-')
+      endDate = (endDate.split('/'))
+      endDate[0] = Number(endDate[0]) + 1
+      endDate = endDate.reverse().join('-')
+      query1 += `created_at >='${startDate} 00:00:00' AND created_at <'${endDate} 00:00:00' `
+    }
+
+    if(sort === 'terbaru') {
+      query1 += `ORDER BY id DESC `
+    }
+
+    query1 += `LIMIT ${startIndex},${limit};`
+    console.log(query1)
+    let transaksi = await query(query1)
+
+    const query2 = `SELECT username FROM user WHERE id = ?`
+    for (let i = 0; i < transaksi.length; i++) {
+        let username = await query(query2, transaksi[i].User_id)
+        transaksi[i] = { ...transaksi[i], username: username[0].username}
+    }
+    const query3 = `SELECT Produk_id, nama_produk, harga_produk, quantity, gambar_produk FROM detailtransaksi WHERE Transaksi_id = ?`
+    //  harga produk di tabel ini sudah dikalikan quantity
+    for (let i = 0; i < transaksi.length; i++) {
+        let produk = await query(query3, transaksi[i].id)
+        transaksi[i] = { ...transaksi[i], produk: produk}
+    }
+
+    const query4 = `SELECT id, gambar_resep FROM resep WHERE Transaksi_id = ?`
+    for (let i = 0; i < transaksi.length; i++) {
+        if(transaksi[i].no_pemesanan.includes('RSP')){
+          let hasil = await query(query4, transaksi[i].id)
+          if(hasil.length){
+            transaksi[i] = { ...transaksi[i], gambarResep: hasil[0].gambar_resep, idResep: hasil[0].id}
+          }
+        }
+    }
+
+    for (let i = 0; i < transaksi.length; i++) {
+      let date = new Date(transaksi[i].created_at)
+      date.setHours(date.getHours() + 7)
+      transaksi[i] = { ...transaksi[i], created_at: date}
+    }
+
+    res.status(200).send(transaksi)
+  } catch (error) {
+    res.status(500).send({
+      error: true, 
+      message: error.message
+    })
+  }
+},
+
+searchTransactionNumber: async(req, res) => {
+  try {
+    const no = req.query.no
+    let query1 = `SELECT no_pemesanan FROM transaksi WHERE no_pemesanan LIKE '%${no}%' LIMIT 10;`
+    const nomorPemesanan = await query(query1)
+    const result = nomorPemesanan.map(n => n.no_pemesanan)
+    res.status(200).send(result)
+  } catch (error) {
+    res.status(500).send({
+      error: true, 
+      message: error.message
+    })
+  }
+},
+
+searchTransactionUsername: async(req, res) => {
+  try {
+    const user = req.query.user
+    let query1 = `SELECT id, username FROM user WHERE username LIKE '%${user}%' LIMIT 10;`
+    let users = await query(query1)
+    let indices = []
+    for(let i=0; i<users.length; i++) {
+      let query2 = `SELECT User_id FROM transaksi WHERE User_id = ${users[i].id} LIMIT 10;`
+      let transactionUser = await query(query2)
+      if(transactionUser.length > 0){indices.push(i)}
+    };
+    let finalUsers = []
+    indices.forEach(val => finalUsers.push(users[val]))
+    const userIds = finalUsers.map(u => u.id)
+    const usernames = finalUsers.map(u => u.username)
+    res.status(200).send({userIds, usernames})
+  } catch (error) {
+    res.status(500).send({
+      error: true, 
+      message: error.message
+    })
+  }
+},
+
+cancelTransaction: async(req, res) => {
+  try {
+    const id = req.body.id
+    query1 = `UPDATE transaksi SET statusTransaksi_id = 7  WHERE id = ?`
+    await query(query1, id)
+    res.status(200).send({error: false, message: 'success!'})
+  } catch (error) {
+    res.status(500).send({
+      error: true, 
+      message: error.message
+    })
+  }
+},
+
+continueTransaction: async(req, res) => {
+  try {
+    const id = req.body.id
+    query1 = `SELECT statusTransaksi_id FROM transaksi WHERE id = ?`
+    let status = await query(query1, id)
+    status = Number(status[0].statusTransaksi_id) + 1
+    query2 = `UPDATE transaksi SET statusTransaksi_id = ?  WHERE id = ?`
+    await query(query2, [status, id])
+    res.status(200).send({error: false, message: 'success!'})
+  } catch (error) {
+    res.status(500).send({
+      error: true, 
+      message: error.message
+    })
+  }
+},
+
+salinResep: async(req, res) => {
+  try {
+    const {pasien, dokter} = req.body
+    const {id, idResep} = req.body.transaction
+    const products = req.body.products
+
+    query1 = `UPDATE transaksi SET statusTransaksi_id = 8  WHERE id = ?`
+    await query(query1, id)
+    
+    query2 = `UPDATE resep SET nama_pasien = ?, nama_dokter = ? WHERE transaksi_id = ?`
+    await query(query2, [pasien, dokter, id])
+
+    query3 = `INSERT INTO detailtransaksi (nama_produk, harga_produk, gambar_produk, quantity,
+              satuan_produk, dosis, Produk_id, Transaksi_id, Resep_id)
+              VALUES (?,?,?,?,?,?,?,?,?)`
+    products.forEach(async (p) => {
+      await query(query3, [p.nama, p.harga, p.gambar, p.qty, p.satuan, p.dosis, p.id, id, idResep])
+    });
+
+    res.status(200).send({error: false, message: 'success!'})
+  } catch (error) {
+    res.status(500).send({
+      error: true, 
+      message: error.message
+    })
+  }
+},
+
+reduceStock: async(req, res) => {
+  try {
+    const idAdmin = req.dataToken.id
+    const products = req.body.transaksi.produk
+    console.log(products)
+
+    query0 = `SELECT stok FROM produk WHERE id = ?`    
+    query1 = `UPDATE produk SET stok = ? WHERE id = ?`
+    query2 = `INSERT INTO detailstokproduk (aktivitas, keluar, masuk, sisa, Produk_id, Admin_id)
+              VALUES ('penjualan barang', ?, 0, ?, ?, ?)`
+    products.forEach(async (p) => {
+      let stok = await query(query0, p.Produk_id)
+      let stokBaru = stok[0].stok - p.quantity
+      await query(query1, [stokBaru, p.Produk_id])
+      await query(query2, [p.quantity, stokBaru, p.Produk_id, idAdmin])
+    });
+    res.status(200).send({error: false, message: 'success!'})
+  } catch (error) {
+    res.status(500).send({
+      error: true, 
+      message: error.message
+    })
+  }
+},
+};

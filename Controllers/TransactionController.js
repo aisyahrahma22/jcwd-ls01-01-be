@@ -124,7 +124,7 @@ module.exports = {
         try {
             const id = req.dataToken.id 
             
-            const query1 = `SELECT id, produk_id AS produkId, quantity, selected
+            const query1 = `SELECT id AS keranjangId, produk_id AS produkId, quantity, selected
             FROM keranjang WHERE user_id = ? AND selected = 1`
             let products = await query(query1, id)
 
@@ -143,6 +143,62 @@ module.exports = {
 
             const query4 = `SELECT * from alamat WHERE user_id = ?`
             let alamat = await query(query4, id)
+
+            res.status(200).send({products, alamat})
+        } catch (error) {
+            res.status(500).send({
+                status: 500,
+                error: true,
+                message: error.message
+            })
+        }
+    },
+
+    getCheckoutDataBeli: async(req,res) => {
+        try {
+            const userId = req.dataToken.id 
+            const productId = req.query.productId
+            const quantity = req.query.quantity
+                        
+            const query1 = `SELECT nama_obat AS namaObat, satuanObat_id AS satuanObatId,
+            harga, diskon, gambar, berat FROM produk WHERE id = ?`
+            let product = await query(query1, productId)
+            
+            const query2 = `SELECT satuan_obat AS satuanObat FROM satuanobat WHERE id = ?`
+            let satuan = await query(query2, product[0].satuanObatId)
+            product[0] = { ...product[0], satuanObat: satuan[0].satuanObat, quantity:quantity, produkId:productId}
+
+            const query3 = `SELECT * from alamat WHERE user_id = ?`
+            let alamat = await query(query3, userId)
+
+            res.status(200).send({product, alamat})
+        } catch (error) {
+            res.status(500).send({
+                status: 500,
+                error: true,
+                message: error.message
+            })
+        }
+    },
+
+    getCheckoutDataResep: async(req,res) => {
+        try {
+            const userId = req.dataToken.id
+            const transactionId = req.query.id
+
+            const query1 = `SELECT id, nama_produk AS namaObat, harga_produk AS harga,
+            gambar_produk AS gambar, satuan_produk AS satuanObat, Produk_id AS produkId, quantity
+            FROM detailtransaksi WHERE Transaksi_id = ?`
+            let products = await query(query1, transactionId)
+            
+            const query2 = `SELECT berat FROM produk WHERE id = ?`
+            for (let i = 0; i < products.length; i++) {
+                let berat = await query(query2, products[i].produkId)
+                products[i] = { ...products[i], berat: berat[0].berat}
+            }
+
+            const query4 = `SELECT * from alamat WHERE user_id = ?`
+            let alamat = await query(query4, userId)
 
             res.status(200).send({products, alamat})
         } catch (error) {
@@ -182,34 +238,37 @@ module.exports = {
         }
     },
 
-    addNewTransaction: async (req,res) => {
+    addNewTransaction: async (req, res) => {
         try {
-            const {
-                noPemesanan,labelAlamat,namaDepan,namaBelakang,noHp,idProvinsi,
-                provinsi,idKabupaten_kota,kabupatenKota,alamat,kodePos,totalPembayaran,
-                kurir,ongkir,MetodePembayaranId
-            } = req.body.dataTransaksi
-            const products = req.body.products
-            const userId = req.dataToken.id 
-
-            const query1 = `INSERT INTO transaksi (no_pemesanan, label_alamat, nama_depan_penerima,
-                nama_belakang_penerima, no_hp, id_provinsi, provinsi, id_kabupaten_kota,
-                kabupaten_kota, alamat, kode_pos, total_pembayaran, kurir, ongkir, MetodePembayaran_id, User_id)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`
-            await query(query1, [noPemesanan,labelAlamat,namaDepan,namaBelakang,
+            const { labelAlamat, namaDepan, namaBelakang, noHp, idProvinsi, provinsi, idKabupaten_kota, kabupatenKota, alamat, kodePos, totalPembayaran, kurir, ongkir, MetodePembayaranId } = req.body.dataTransaksi;
+            const products = req.body.products;
+            const userId = req.dataToken.id;
+        
+            const query1 = `INSERT INTO transaksi (label_alamat, nama_depan_penerima,
+                        nama_belakang_penerima, no_hp, id_provinsi, provinsi, id_kabupaten_kota,
+                        kabupaten_kota, alamat, kode_pos, total_pembayaran, kurir, ongkir, MetodePembayaran_id, User_id, statusTransaksi_id)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 2);`
+            await db.query(query1, [labelAlamat,namaDepan,namaBelakang,
             noHp,idProvinsi,provinsi,idKabupaten_kota,kabupatenKota,alamat,kodePos,totalPembayaran,
-            kurir,ongkir,MetodePembayaranId,userId])
-            
-            const query2 = `SELECT MAX(id) AS id FROM transaksi WHERE User_id = ?;`
-            let transactionId = await query(query2, userId)
-
-            const query3 = `INSERT INTO detailtransaksi (nama_produk, harga_produk,
-                gambar_produk, quantity, satuan_produk, Produk_id, Transaksi_id)
-                VALUES (?, ?, ?, ?, ?, ?, ?)`
-            products.forEach(p => {
-                query(query3, [p.namaObat, p.harga, p.gambar, p.quantity, p.satuanObat, p.produkId, transactionId[0].id])
-            });
-            res.status(200).send({error: false, message:'Success!'})
+            kurir,ongkir,MetodePembayaranId,userId], async (err, results) => {
+                console.log(err)
+                const transactionId = results.insertId
+                const query2 = `UPDATE transaksi SET no_pemesanan = 'APTKBBS${transactionId}' WHERE id = ${transactionId}`
+                await query(query2)
+                const query3 = `INSERT INTO detailtransaksi (nama_produk, harga_produk,
+                    gambar_produk, quantity, satuan_produk, Produk_id, Transaksi_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)`
+                const query4 = `DELETE FROM keranjang WHERE id = ?`
+                products.forEach(async p => {
+                    await query(query3, [p.namaObat, p.harga, p.gambar, p.quantity, p.satuanObat, p.produkId, transactionId])
+                    if(p.keranjangId){await query(query4, p.keranjangId)}
+                });
+                const query5 = `CREATE EVENT IF NOT EXISTS deadline_bayar_${transactionId}
+                ON SCHEDULE AT CURRENT_TIMESTAMP + INTERVAL 1 DAY
+                DO UPDATE transaksi SET statusTransaksi_id = 7 WHERE id = ${transactionId};`
+                await query(query5)
+                res.status(200).send({transactionId})
+            })
         } catch (error) {
             res.status(500).send({
                 status: 500,
@@ -219,55 +278,84 @@ module.exports = {
         }
     },
 
-    getPaymentDetails: async(req,res) => {
+    checkoutResep: async (req,res) => {
         try {
-            const id = req.query.transactionid
-            
-            const query1 = `SELECT created_at AS createdAt, total_pembayaran AS totalPembayaran, 
-            MetodePembayaran_id FROM transaksi WHERE id = ?;`
-            const transaction = await query(query1, id)
+            const { labelAlamat, namaDepan, namaBelakang, noHp, idProvinsi, provinsi, idKabupaten_kota, kabupatenKota, alamat, kodePos, totalPembayaran, kurir, ongkir, MetodePembayaranId } = req.body.dataTransaksi;
+            const transactionId = req.query.id
 
-            const query2 = `SELECT id, nama_produk AS nama, harga_produk AS harga,
-            quantity, gambar_produk AS gambar, satuan_produk AS satuan FROM detailtransaksi WHERE Transaksi_id = ?`
-            const products = await query(query2, id)
+            const query1 = `UPDATE transaksi SET label_alamat = ?, nama_depan_penerima = ?,
+                        nama_belakang_penerima = ?, no_hp = ?, id_provinsi = ?, provinsi = ?, id_kabupaten_kota = ?,
+                        kabupaten_kota = ?, alamat = ?, kode_pos = ?, total_pembayaran = ?, kurir = ?, ongkir = ?,
+                        MetodePembayaran_id = ?, statusTransaksi_id = 2, waktu_ganti_status = CURRENT_TIMESTAMP WHERE id = ?;`
+            await query(query1, [labelAlamat,namaDepan,namaBelakang,noHp,idProvinsi,provinsi,idKabupaten_kota,kabupatenKota,
+                alamat,kodePos,totalPembayaran,kurir,ongkir,MetodePembayaranId,transactionId])
             
-            const query3 = `SELECT * FROM metodepembayaran WHERE id = ?`
-            const metodePembayaran = await query(query3, transaction[0].MetodePembayaran_id)
-            
-            res.status(200).send({transaction: transaction[0], products, metodePembayaran: metodePembayaran[0]})
+            const query2 = `CREATE EVENT IF NOT EXISTS deadline_bayar_${transactionId}
+            ON SCHEDULE AT CURRENT_TIMESTAMP + INTERVAL 1 DAY
+            DO UPDATE transaksi SET statusTransaksi_id = 7 WHERE id = ${transactionId};`
+            await query(query2)
+
+            res.status(200).send({transactionId})
         } catch (error) {
             res.status(500).send({
                 status: 500,
                 error: true,
-                message: error.message
-            })
+                message: error.message,
+            });
+        }
+    },
+
+    getPaymentDetails: async (req, res) => {
+        try {
+            const id = req.query.transactionid;
+        
+            const query1 = `SELECT created_at AS createdAt, total_pembayaran AS totalPembayaran, 
+                    MetodePembayaran_id FROM transaksi WHERE id = ?;`;
+            const transaction = await query(query1, id);
+        
+            const query2 = `SELECT id, nama_produk AS nama, harga_produk AS harga,
+                    quantity, gambar_produk AS gambar, satuan_produk AS satuan FROM detailtransaksi WHERE Transaksi_id = ?`;
+            const products = await query(query2, id);
+        
+            const query3 = `SELECT * FROM metodepembayaran WHERE id = ?`;
+            const metodePembayaran = await query(query3, transaction[0].MetodePembayaran_id);
+        
+            res.status(200).send({ transaction: transaction[0], products, metodePembayaran: metodePembayaran[0] });
+        } catch (error) {
+            res.status(500).send({
+                status: 500,
+                error: true,
+                message: error.message,
+            });
         }
     },
 
     uploadPaymentProof: (req, res) => {
-    const path = 'Public/buktipembayaran';
-    const upload = uploader(path, 'PROOF').fields([{ name: 'image' }]);
-
-    upload(req, res, (err) => {
-        if (err) {
-        return res.status(500).json({ message: 'Image upload failed!', error: err.message });
-        }
-        const { image } = req.files;
-        const imagePath = image ? path + '/' + image[0].filename : null;
-        const data = JSON.parse(req.body.data);
-        try {
-            const query1 = `UPDATE transaksi SET bukti_pembayaran = ? WHERE id = ?;`
-            db.query(query1, [imagePath, data.id], (err, result) => {
-            if(err) return res.status(500).send({ message: 'Error!', error: err})
-            return res.status(200).send({error: false, message:'Success!'})
-        })   
-            
-        } catch (err) {
-            console.log(err.message);
-            return res.status(500).json({ message: 'Server Error', error: err });
-        }
-    });
+        const path = 'Public/buktipembayaran';
+        const upload = uploader(path, 'PROOF').fields([{ name: 'image' }]);
+    
+        upload(req, res, (err) => {
+            if (err) {
+                return res.status(500).json({ message: 'Image upload failed!', error: err.message });
+            }
+            const { image } = req.files;
+            const imagePath = image ? path + '/' + image[0].filename : null;
+            const data = JSON.parse(req.body.data);
+            try {
+                const query1 = `UPDATE transaksi SET bukti_pembayaran = ?, statusTransaksi_id = 3 WHERE id = ?;`;
+                db.query(query1, [imagePath, data.id], async (err, result) => {
+                if (err) return res.status(500).send({ message: 'Error!', error: err });
+                const query2 = `DROP EVENT deadline_bayar_${data.id};`
+                await query(query2)
+                return res.status(200).send({ error: false, message: 'Success!' });
+                });
+            } catch (err) {
+                console.log(err.message);
+                return res.status(500).json({ message: 'Server Error', error: err });
+            }
+        });
     },
+
     getSemuaPesananUser: async(req, res) => {
       try {
         let id = req.dataToken.id

@@ -65,7 +65,7 @@ getProductCards: async(req,res) => {
         const startIndex = (page - 1) * limit
         
         let query1 = `SELECT id, nama_obat AS namaObat,
-        butuh_resep AS butuhResep, harga, gambar, stok,
+        butuh_resep AS butuhResep, harga, diskon, gambar, stok,
         Keluhan_id AS keluhanId,
         KategoriObat_id AS kategoriObatId,
         SatuanObat_id AS satuanObatId,
@@ -105,7 +105,6 @@ getProductCards: async(req,res) => {
         if(sortBy == 'hargaTertinggi'){query1 += `ORDER BY harga DESC `}
         
         query1 += `LIMIT ${startIndex},${limit};`
-
 
         const products = await query(query1)
 
@@ -173,7 +172,7 @@ getProductDetail: async(req,res) => {
     try {
         const id = parseInt(req.query.id)
         
-        let query1 = `SELECT id, nama_obat AS namaObat, butuh_resep AS butuhResep, harga, gambar, stok,
+        let query1 = `SELECT id, nama_obat AS namaObat, butuh_resep AS butuhResep, harga, diskon, gambar, stok,
         indikasi, komposisi, kemasan, cara_penyimpanan AS caraPenyimpanan,
         principal, nie, cara_pakai AS caraPakai, peringatan, Keluhan_id AS keluhanId,
         KategoriObat_id AS kategoriObatId, SatuanObat_id AS satuanObatId, GolonganObat_id AS golonganObatId
@@ -212,7 +211,7 @@ getRelatedProducts: async(req,res) => {
         const golonganObatId = parseInt(req.query.golonganobatid)
         
         const query1 = `SELECT id, nama_obat AS namaObat,
-        butuh_resep AS butuhResep, harga, gambar, stok,
+        butuh_resep AS butuhResep, harga, diskon, gambar, stok,
         SatuanObat_id AS satuanObatId
         FROM produk WHERE keluhan_id = ? 
         AND NOT id = ? LIMIT 0,5`
@@ -222,7 +221,7 @@ getRelatedProducts: async(req,res) => {
         if(products.length < 5){
             const limit = 5 - products.length
             const query2 = `SELECT id, nama_obat AS namaObat,
-            butuh_resep AS butuhResep, harga, gambar, stok,
+            butuh_resep AS butuhResep, harga, diskon, gambar, stok,
             SatuanObat_id AS satuanObatId
             FROM produk WHERE golonganobat_id = ? 
             AND NOT id = ? LIMIT 0,${limit}`
@@ -252,15 +251,14 @@ getRelatedProducts: async(req,res) => {
 searchProducts: async(req, res) => {
     try {
         let entry = req.query.entry
-        
 
         const query1 = `SELECT COUNT(*) AS total FROM produk WHERE nama_obat LIKE ?`
         let total = await query(query1, ['%' + entry + '%'])
 
-        const query2 = `SELECT id, nama_obat AS namaObat FROM produk WHERE nama_obat LIKE ?`
+        const query2 = `SELECT id, nama_obat AS namaObat, diskon, satuanObat_id, gambar, stok FROM produk WHERE nama_obat LIKE ?`
         let products1 = await query(query2, [entry + '%'])
         
-        const query3 = `SELECT id, nama_obat AS namaObat FROM produk WHERE nama_obat LIKE ? AND nama_obat NOT LIKE ?`
+        const query3 = `SELECT id, nama_obat AS namaObat, diskon, satuanObat_id, gambar, stok FROM produk WHERE nama_obat LIKE ? AND nama_obat NOT LIKE ?`
         let products2 = await query(query3, [('%' + entry + '%'), (entry + '%')])
         
         let products = [...products1, ...products2]

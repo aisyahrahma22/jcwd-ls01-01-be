@@ -10,9 +10,12 @@ Router.patch('/editselected', jwtVerify, TransactionController.editSelected)
 Router.patch('/selectall', jwtVerify, TransactionController.selectAll)
 Router.delete('/deleteproduct', jwtVerify, TransactionController.deleteProduct)
 Router.get('/getcheckoutdata', jwtVerify, TransactionController.getCheckoutData)
+Router.get('/getcheckoutdatabeli', jwtVerify, TransactionController.getCheckoutDataBeli)
+Router.get('/getcheckoutdataresep', jwtVerify, TransactionController.getCheckoutDataResep)
 Router.get('/getpaymentmethod', jwtVerify, TransactionController.getPaymentMethod)
 Router.get('/getmaxid', TransactionController.getMaxId)
 Router.post('/addnewtransaction', jwtVerify, TransactionController.addNewTransaction)
+Router.patch('/checkoutresep', jwtVerify, TransactionController.checkoutResep)
 Router.get('/getpaymentdetails', jwtVerify, TransactionController.getPaymentDetails)
 Router.patch('/uploadpaymentproof', jwtVerify, TransactionController.uploadPaymentProof);
 Router.get('/getsemuapesanan', jwtVerify, TransactionController.getSemuaPesananUser);
