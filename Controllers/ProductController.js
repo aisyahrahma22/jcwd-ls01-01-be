@@ -133,13 +133,16 @@ try {
       return res.status(500).json({ message: 'Uplous Resep failed !', error: err.message });
     }
     const { image } = req.files;
+    console.log('ini { image }', { image })
     const imagePath = image ? path + '/' + image[0].filename : null;
+    console.log('imagePath ', imagePath )
+
+   if(imagePath === null ){
+    return res.status(500).json({ message: 'Resep Tidak Terdeteksi, Uploud Resep Gagal', error: true });
+   }else{
 
     var sql = `INSERT INTO resep (gambar_resep, User_id) VALUES ('${imagePath}', '${id}');`;
     db.query(sql, (err, results) => {
-      console.log('ini results', results);
-    //   console.log('ini err', results[0].insertId);
-      console.log('ini err', results.insertId);
       if (err) {
         return res.status(500).json({ message: 'Server Error', error: err.message });
       }
@@ -162,6 +165,9 @@ try {
       });
       });
     });
+   }
+
+   
   });
 } catch (err) {
   return res.status(500).json({ message: 'Server Error', error: err.message });
