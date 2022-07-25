@@ -27,5 +27,7 @@ Router.get('/searchtransactionnumber', jwtVerify, AdminController.searchTransact
 Router.get('/searchtransactionusername', jwtVerify, AdminController.searchTransactionUsername);
 Router.patch('/canceltransaction', jwtVerify, AdminController.cancelTransaction);
 Router.patch('/continuetransaction', jwtVerify, AdminController.continueTransaction);
+Router.post('/salinresep', jwtVerify, AdminController.salinResep);
+Router.post('/reducestock', jwtVerify, AdminController.reduceStock);
 
 module.exports = Router;

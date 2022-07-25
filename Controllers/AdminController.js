@@ -599,6 +599,7 @@ transactionCount: async(req, res) => {
     if(status === 'dalam-pengiriman'){query1 += `WHERE statusTransaksi_id = 5 `}
     if(status === 'pesanan-selesai'){query1 += `WHERE statusTransaksi_id = 6 `}
     if(status === 'pesanan-dibatalkan'){query1 += `WHERE statusTransaksi_id = 7 `}
+    if(status === 'menunggu-checkout'){query1 += `WHERE statusTransaksi_id = 8 `}
 
     if((status === ('semua-pesanan' || '')) && (transnum || userIds || startDate || endDate)){
       query1 += `WHERE `
@@ -661,6 +662,7 @@ transactionDetail: async(req, res) => {
     if(status === 'dalam-pengiriman'){query1 += `WHERE statusTransaksi_id = 5 `}
     if(status === 'pesanan-selesai'){query1 += `WHERE statusTransaksi_id = 6 `}
     if(status === 'pesanan-dibatalkan'){query1 += `WHERE statusTransaksi_id = 7 `}
+    if(status === 'menunggu-checkout'){query1 += `WHERE statusTransaksi_id = 8 `}
 
     if((status === ('semua-pesanan' || '')) && (transnum || userIds || startDate || endDate)){
       query1 += `WHERE `
@@ -704,18 +706,20 @@ transactionDetail: async(req, res) => {
         let username = await query(query2, transaksi[i].User_id)
         transaksi[i] = { ...transaksi[i], username: username[0].username}
     }
-    const query3 = `SELECT nama_produk, harga_produk, quantity, gambar_produk FROM detailtransaksi WHERE Transaksi_id = ?`
+    const query3 = `SELECT Produk_id, nama_produk, harga_produk, quantity, gambar_produk FROM detailtransaksi WHERE Transaksi_id = ?`
     //  harga produk di tabel ini sudah dikalikan quantity
     for (let i = 0; i < transaksi.length; i++) {
         let produk = await query(query3, transaksi[i].id)
         transaksi[i] = { ...transaksi[i], produk: produk}
     }
 
-    const query4 = `SELECT gambar_resep FROM resep WHERE Transaksi_id = ?`
+    const query4 = `SELECT id, gambar_resep FROM resep WHERE Transaksi_id = ?`
     for (let i = 0; i < transaksi.length; i++) {
         if(transaksi[i].no_pemesanan.includes('RSP')){
-          let gambar = await query(query4, transaksi[i].id)
-          transaksi[i] = { ...transaksi[i], gambarResep: gambar[0].gambar_resep}
+          let hasil = await query(query4, transaksi[i].id)
+          if(hasil.length){
+            transaksi[i] = { ...transaksi[i], gambarResep: hasil[0].gambar_resep, idResep: hasil[0].id}
+          }
         }
     }
 
@@ -795,6 +799,59 @@ continueTransaction: async(req, res) => {
     status = Number(status[0].statusTransaksi_id) + 1
     query2 = `UPDATE transaksi SET statusTransaksi_id = ?  WHERE id = ?`
     await query(query2, [status, id])
+    res.status(200).send({error: false, message: 'success!'})
+  } catch (error) {
+    res.status(500).send({
+      error: true, 
+      message: error.message
+    })
+  }
+},
+
+salinResep: async(req, res) => {
+  try {
+    const {pasien, dokter} = req.body
+    const {id, idResep} = req.body.transaction
+    const products = req.body.products
+
+    query1 = `UPDATE transaksi SET statusTransaksi_id = 8  WHERE id = ?`
+    await query(query1, id)
+    
+    query2 = `UPDATE resep SET nama_pasien = ?, nama_dokter = ? WHERE transaksi_id = ?`
+    await query(query2, [pasien, dokter, id])
+
+    query3 = `INSERT INTO detailtransaksi (nama_produk, harga_produk, gambar_produk, quantity,
+              satuan_produk, dosis, Produk_id, Transaksi_id, Resep_id)
+              VALUES (?,?,?,?,?,?,?,?,?)`
+    products.forEach(async (p) => {
+      await query(query3, [p.nama, p.harga, p.gambar, p.qty, p.satuan, p.dosis, p.id, id, idResep])
+    });
+
+    res.status(200).send({error: false, message: 'success!'})
+  } catch (error) {
+    res.status(500).send({
+      error: true, 
+      message: error.message
+    })
+  }
+},
+
+reduceStock: async(req, res) => {
+  try {
+    const idAdmin = req.dataToken.id
+    const products = req.body.transaksi.produk
+    console.log(products)
+
+    query0 = `SELECT stok FROM produk WHERE id = ?`    
+    query1 = `UPDATE produk SET stok = ? WHERE id = ?`
+    query2 = `INSERT INTO detailstokproduk (aktivitas, keluar, masuk, sisa, Produk_id, Admin_id)
+              VALUES ('penjualan barang', ?, 0, ?, ?, ?)`
+    products.forEach(async (p) => {
+      let stok = await query(query0, p.Produk_id)
+      let stokBaru = stok[0].stok - p.quantity
+      await query(query1, [stokBaru, p.Produk_id])
+      await query(query2, [p.quantity, stokBaru, p.Produk_id, idAdmin])
+    });
     res.status(200).send({error: false, message: 'success!'})
   } catch (error) {
     res.status(500).send({
