@@ -3,13 +3,13 @@ const util = require('util');
 const query = util.promisify(db.query).bind(db);
 
 var url = 'https://api.rajaongkir.com/starter';
-var headers = '8a893732f389789a4c005911c2e314ba';
+const key = 'f7e960f8b1d392519e77eb69c2d44a47';
 const axios = require('axios');
 
 module.exports = {
   getProvince: (req, res) => {
     axios
-      .get(`${url}/province?key=${headers}`)
+      .get(`${url}/province?key=${key}`)
       .then((response) => {
         res.send({
           error: false,
@@ -23,7 +23,7 @@ module.exports = {
   },
   getCity: (req, res) => {
     axios
-      .get(`${url}/city?province=${req.headers.provinceid}&key=${headers}`)
+      .get(`${url}/city?province=${req.headers.provinceid}&key=${key}`)
       .then((response) => {
         res.send({
           error: false,
@@ -41,21 +41,21 @@ module.exports = {
       const berat = req.headers.berat;
 
       let query1 = {
-        key: '8a893732f389789a4c005911c2e314ba',
+        key: 'f7e960f8b1d392519e77eb69c2d44a47',
         origin: '152',
         destination: city,
         weight: berat,
         courier: 'jne',
       };
       let query2 = {
-        key: '8a893732f389789a4c005911c2e314ba',
+        key: 'f7e960f8b1d392519e77eb69c2d44a47',
         origin: '152',
         destination: city,
         weight: berat,
         courier: 'pos',
       };
       let query3 = {
-        key: '8a893732f389789a4c005911c2e314ba',
+        key: 'f7e960f8b1d392519e77eb69c2d44a47',
         origin: '152',
         destination: city,
         weight: berat,
