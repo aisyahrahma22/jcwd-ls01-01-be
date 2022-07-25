@@ -378,24 +378,26 @@ module.exports = {
 
   editProfileData: (req, res) => {
     var id = req.dataToken.id;
+
     var sql = `SELECT * from user where id = ${id};`;
     db.query(sql, (err, results) => {
       if (err) throw err;
-      console.log('err', err);
+
       if (results.length > 0) {
         const path = 'Public/users';
         const upload = uploader(path, 'USER').fields([{ name: 'image' }]);
 
-        upload(req, res, (error) => {
-          if (error) {
-            return res.status(500).json({ message: 'Edit Foto Profile Gagal !', error: error.message });
+        upload(req, res, (err) => {
+          if (err) {
+            return res.status(500).json({ message: 'Edit Foto Profile Gagal !', error: err.message });
           }
 
           const { image } = req.files;
           const imagePath = image ? path + '/' + image[0].filename : null;
           const data = JSON.parse(req.body.data);
-
+  
           try {
+          
             if (imagePath) {
               data.profile_picture = imagePath;
             }
@@ -406,55 +408,47 @@ module.exports = {
               data.umur = usia;
             }
 
-            sql = `SELECT * FROM user WHERE username = ?;`;
-            db.query(sql, data.username, (err3, results3) => {
-              if (err3) {
-                return res.status(500).json({ message: 'Server Error', error: err3.message });
+            sql = `Update user set ? where id = ${id};`;
+            db.query(sql, data, (err1, results1) => {
+            
+         
+              if (err1) {
+                console.log('imagePath err1', imagePath);
+                if (imagePath) {
+                  fs.unlinkSync('./Public/users' + imagePath);
+                }
+                return res.status(500).json({ message: 'Server Error', error: err1.message });
               }
-              if (results3.length > 0) {
-                if (results[0].username !== results3[0].username) {
-                  return res.status(500).json({ message: 'Username Sudah Dipakai', error: true });
+
+             
+              if (results[0].profile_picture === '' || results[0].profile_picture === null) {
+                if (imagePath === null) {
+                  data.profile_picture = results[0].profile_picture;
                 } else {
-                  sqlHasil = `Update user set ? where id = ${id};`;
-                  db.query(sqlHasil, data, (err1, results1) => {
-                    if (err1) {
-                      if (imagePath) {
-                        fs.unlinkSync('./Public/users' + imagePath);
-                      }
-                      return res.status(500).json({ message: 'Server Error', error: err1.message });
-                    }
-
-                    if (results[0].profile_picture === '' || results[0].profile_picture === null) {
-                      if (imagePath === null) {
-                        data.profile_picture = results[0].profile_picture;
-                      } else {
-                        data.profile_picture = imagePath;
-                      }
-                    } else {
-                      if (!data.profile_picture) {
-                        data.profile_picture = results[0].profile_picture;
-                      } else {
-                        if (data.profile_picture !== results[0].profile_picture) {
-                          fs.unlinkSync('' + results[0].profile_picture);
-                        }
-                      }
-                    }
-                  });
-
-                  queryHasil = `SELECT * from user where id = ${id}`;
-                  db.query(queryHasil, (err4, results4) => {
-                    if (err4) {
-                      return res.status(500).json({ message: 'Server Error', error: err4.message });
-                    }
-
-                    return res.status(200).send(results4);
-                  });
+                 
+                  data.profile_picture = imagePath;
+                }
+              } else {
+                if (!data.profile_picture) {
+                  data.profile_picture = results[0].profile_picture;
+                } else {
+                  if (data.profile_picture !== results[0].profile_picture) {
+                    fs.unlinkSync('' + results[0].profile_picture);
+                  }
                 }
               }
+          
+              queryHasil = `SELECT * from user where id = ${id}`;
+              db.query(queryHasil, id, (err4, results4) => {
+                if (err4) {
+                  return res.status(500).json({ message: 'Server Error', error: err.message });
+                }
+
+                return res.status(200).send(results4);
+              });
             });
-          } catch (error) {
-            console.log('err', error);
-            return res.status(500).json({ message: 'Server Error', error: error.message });
+          } catch (err) {
+            return res.status(500).json({ message: 'Server Error', error: err.message });
           }
         });
       }
@@ -657,4 +651,76 @@ module.exports = {
       return res.status(200).json(result);
     });
   },
+
+  editAlamat: (req, res) => {
+    console.log('req', req)
+    var alamat_id = req.params.id;
+    var id = req.dataToken.id;
+    const data = req.body
+    console.log('ini id', id)
+    console.log('ini data', data)
+
+    var sql = `SELECT * from alamat where id = ${alamat_id} AND User_id = ${id};`;
+    db.query(sql, (err, results) => {
+      console.log('ini results', results)
+      if (err) throw err;
+      var sql1 = `Update alamat set ? where id = ${alamat_id};`;
+      db.query(sql1, data, (err1, results1) => {
+        console.log('ini results1', results1)
+        if (err1) throw err1;
+        var sql2 =`SELECT * from alamat where id = ${alamat_id} AND User_id = ${id};`;
+        db.query(sql2,  (err2, results2) => {
+          console.log('ini results2', results2)
+          if (err2) throw err2;
+          return res.status(200).json({ message: 'Edit Alamat Berhasil', error: false, data: results2 });
+        });
+      });
+    });
+  },
+  getAlamatUser2: async(req, res) => {
+    try {
+        let id = req.dataToken.id
+        var alamat_id = req.params.id;
+
+        let query1 = `SELECT * FROM alamat WHERE id = ${alamat_id} AND User_id = ${id} ;`
+
+        const data = await query(query1)
+    
+        res.status(200).send(data)
+    } catch (error) {
+        res.status(400).send({
+            status: 400,
+            error: true,
+            message: error.message
+        })
+    }
+},
+getAlamatUser: async(req, res) => {
+  try {
+      let id = req.dataToken.id
+      const page = parseInt(req.query.page)
+      const limit = parseInt(req.query.limit)
+      const start = (page - 1) * limit
+      const end = page * limit
+
+      let query1 = `SELECT * FROM alamat WHERE User_id = ${id} 
+      ORDER BY id DESC LIMIT ${start},${limit};`
+
+      const data = await query(query1)
+
+      let query3 = `SELECT COUNT(alamat.id) as total FROM alamat WHERE User_id = ${id}`;
+      for (let i = 0; i < data.length; i++) {
+          let total = await query(query3);
+          data[i] = { ...data[i], total};
+      }
+
+      res.status(200).send(data)
+  } catch (error) {
+      res.status(400).send({
+          status: 400,
+          error: true,
+          message: error.message
+      })
+  }
+},
 };
