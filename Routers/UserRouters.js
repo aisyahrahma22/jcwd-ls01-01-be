@@ -19,5 +19,8 @@ Router.patch('/resetpassword', jwtVerify, UserController.resetPassword);
 Router.get('/getaddress', jwtVerify, UserController.getAddress);
 Router.post('/addaddress', jwtVerify, UserController.addAddress);
 Router.get('/gettokenuser', jwtVerify, UserController.getTokenUser);
+Router.patch('/editalamat/:id', jwtVerify, UserController.editAlamat);
+Router.get('/getalamatuser', jwtVerify, UserController.getAlamatUser);
+Router.get('/getalamatuser2/:id', jwtVerify, UserController.getAlamatUser2);
 
 module.exports = Router;
