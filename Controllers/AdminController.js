@@ -164,26 +164,30 @@ module.exports = {
   deleteProduct: async (req, res) => {
     try {
      
-      const Id = req.params.id;
-      console.log(Id)
+      var ProdukId = req.params.id;
+      console.log('ini produk id',  ProdukId)
 
+      const sql0 = `Select * FROM detailstokproduk WHERE Produk_id = ${ProdukId};`
+      let sql0Result = await query(sql0);
+     
+
+      if(sql0Result.length > 0){
+      const sqlA = 'DELETE FROM detailstokproduk WHERE Produk_id = ?;';
+      let sqlAResult = await query(sqlA, [ProdukId]);
+        
       const sql1 = 'DELETE FROM produk WHERE id = ?;';
-      let sql1Result = await query(sql1, [Id]);
-      
+      let sql1Result = await query(sql1, [ProdukId]);
+    
+      }else{
+        const sql3 = 'DELETE FROM produk WHERE id = ?;';
+        let sql3Result = await query(sql3, [ProdukId]);
+      }
+
       const sql2 = `Select produk.nama_obat, produk.NIE, produk.stok, produk.harga, produk.nilai_barang, produk.id, golonganobat.golongan_obat, satuanobat.satuan_obat from produk JOIN golonganobat ON produk.GolonganObat_id = golonganobat.id JOIN satuanobat ON produk.SatuanObat_id = satuanobat.id ORDER BY produk.id;`
       let sql2Result = await query(sql2);
-  
-      // var newArray = []
-      // for (let i = 0; i < sql2Result.length; i++) {
-      //     let data = sql2Result[i]
-      //     let newData = data.slice(1, 115)
-      //     newArray.push(newData)
-      // }
 
-      // console.log('newArray ', newArray )
   
       res.status(200).send({
-        deleteData: sql1Result,
         error: false,
         message: 'Delete Product Success!',
         data: sql2Result 
