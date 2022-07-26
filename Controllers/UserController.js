@@ -9,6 +9,8 @@ const fs = require('fs');
 const handlebars = require('handlebars');
 const jwt = require('jsonwebtoken');
 const path = require('path');
+const API_URL = require('../Helpers/API_URL.js');
+
 
 module.exports = {
   register: async (req, res) => {
@@ -63,7 +65,7 @@ module.exports = {
               let htmlString = fs.readFileSync(filepath, 'utf-8');
 
               const template = handlebars.compile(htmlString);
-              const htmlToEmail = template({ link: `http://localhost:3000/confirmation/${token}` });
+              const htmlToEmail = template({ link: `${API_URL}/confirmation/${token}` });
 
               // Step5.1. Send Email Confirmation
 
@@ -76,7 +78,7 @@ module.exports = {
               //     if (err) throw err;
 
               //     const newTemplate = handlebars.compile(file);
-              //     const newTemplateResult = newTemplate({ bebas: data.email, link: `http://localhost:3000/confirmation/${token}` });
+              //     const newTemplateResult = newTemplate({ bebas: data.email, link: `${API_URL}/confirmation/${token}` });
 
               transporter
                 .sendMail({
@@ -329,7 +331,7 @@ module.exports = {
                   let htmlString = fs.readFileSync(filepath, 'utf-8');
 
                   const template = handlebars.compile(htmlString);
-                  const htmlToEmail = template({ link: `http://localhost:3000/confirmation/${token}` });
+                  const htmlToEmail = template({ link: `${API_URL}/confirmation/${token}` });
 
                   transporter
                     .sendMail({
@@ -496,7 +498,7 @@ module.exports = {
                   let htmlString = fs.readFileSync(filepath, 'utf-8');
 
                   const template = handlebars.compile(htmlString);
-                  const htmlToEmail = template({ link: `http://localhost:3000/newpassword/${token}` });
+                  const htmlToEmail = template({ link: `${API_URL}/newpassword/${token}` });
 
                   transporter
                     .sendMail({
