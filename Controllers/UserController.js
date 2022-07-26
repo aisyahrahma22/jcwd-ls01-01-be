@@ -408,6 +408,10 @@ module.exports = {
               data.umur = usia;
             }
 
+            if(!/\S+@\S+\.\S+/.test(data.email)){
+              return res.status(500).json({ message: 'Format Email Salah', error: true });
+            }
+
             sql = `Update user set ? where id = ${id};`;
             db.query(sql, data, (err1, results1) => {
             
@@ -704,7 +708,7 @@ getAlamatUser: async(req, res) => {
       const end = page * limit
 
       let query1 = `SELECT * FROM alamat WHERE User_id = ${id} 
-      ORDER BY id DESC LIMIT ${start},${limit};`
+      LIMIT ${start},${limit};`
 
       const data = await query(query1)
 
