@@ -29,5 +29,10 @@ Router.patch('/continuetransaction', jwtVerify, AdminController.continueTransact
 Router.post('/salinresep', jwtVerify, AdminController.salinResep);
 Router.post('/reducestock', jwtVerify, AdminController.reduceStock);
 Router.get('/bukukas', AdminController.getBukuKas);
+Router.get('/statistik', AdminController.getStatistik);
+Router.get('/transaksibulanan', AdminController.getTransaksiBulanan);
+Router.get('/totalpendapatan', AdminController.getTotalPendapat);
+Router.get('/pembatalan', AdminController.getTotalPembatalan);
+Router.get('/labarugi', AdminController.getDataLaba);
 
 module.exports = Router;
