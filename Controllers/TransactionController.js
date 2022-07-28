@@ -363,13 +363,45 @@ module.exports = {
         const limit = parseInt(req.query.limit)
         const start = (page - 1) * limit
         const end = page * limit
+        var newDate =  new Date().getTime()
         
           let query1 = `SELECT transaksi.id, transaksi.total_pembayaran, transaksi.created_at as tanggal_transaksi, transaksi.waktu_ganti_status, statustransaksi.status_transaksi FROM transaksi 
           JOIN statustransaksi ON transaksi.statusTransaksi_id = statustransaksi.id WHERE transaksi.User_id = ${id} 
           ORDER BY transaksi.id DESC LIMIT ${start},${limit};`
 
           const data = await query(query1)
-          
+          console.log('data', data)
+
+          if(data.length > 0){
+            for (let i = 0; i < data.length; i++) {
+                if(data[i].status_transaksi === 'Menunggu Konfirmasi Resep'){
+                    let query0 = `SELECT resep.id as no_resep, transaksi.id as transaksi_id, transaksi.statusTransaksi_id, resep.gambar_resep, 
+                    resep.tgl_pemesanan, transaksi.no_pemesanan from resep 
+                    JOIN transaksi ON resep.Transaksi_id = transaksi.id WHERE resep.User_id = ${id} AND resep.Transaksi_id = ${data[i].id}`
+                    const transaksiResep = await query(query0)
+
+                    if(transaksiResep.length > 0){
+                        for (let i = 0; i < transaksiResep.length; i++) {
+                            let tanggal = transaksiResep[i].tgl_pemesanan
+                            let endTime2 = new Date(tanggal).getTime(tanggal) + (60000 * 5);
+                            if(newDate > endTime2){
+                                let sql = `INSERT INTO riwayat_resep (gambar, tgl_pemesanan, Transaksi_id, User_id, Resep_id, statusTransaksi_id) VALUES ('${transaksiResep[i].gambar_resep}', '${transaksiResep[i].tgl_pemesanan}','${transaksiResep[i].transaksi_id}', '${id}', '${transaksiResep[i].no_resep}', '7');`
+                                const queryHasil = await query(sql)
+                    
+                                let sql1 = `DELETE FROM resep WHERE resep.Transaksi_id = ${transaksiResep[i].transaksi_id} `
+                                const query1Hasil = await query(sql1)
+                              
+                                let sql2 = `UPDATE transaksi SET statusTransaksi_id = 7 WHERE id = ${transaksiResep[i].transaksi_id};`
+                                let query2Hasil = await query(sql2);
+                            }
+                        }
+                    }
+                }
+               
+            }
+           
+          }
+
           
           let query2 = `SELECT detailtransaksi.id, detailtransaksi.Produk_id, detailtransaksi.Transaksi_id, detailtransaksi.nama_produk, detailtransaksi.harga_produk, detailtransaksi.quantity, detailtransaksi.satuan_produk, detailtransaksi.gambar_produk 
           FROM detailtransaksi WHERE detailtransaksi.Transaksi_Id = ? ORDER BY id;`
@@ -431,6 +463,7 @@ module.exports = {
             const limit = parseInt(req.query.limit)
             const start = (page - 1) * limit
             const end = page * limit
+            var newDate =  new Date().getTime()
 
             let query1 = `SELECT transaksi.id, transaksi.total_pembayaran, transaksi.created_at as tanggal_transaksi, transaksi.waktu_ganti_status, statustransaksi.status_transaksi FROM transaksi 
             JOIN statustransaksi ON transaksi.statusTransaksi_id = statustransaksi.id WHERE NOT transaksi.statusTransaksi_id = 7 AND NOT transaksi.statusTransaksi_id = 6 AND NOT transaksi.statusTransaksi_id = 5 AND NOT transaksi.statusTransaksi_id = 4 AND
@@ -446,11 +479,35 @@ module.exports = {
                         const queryHasil = await query(sql)
                         let sql1 = `DELETE FROM resep WHERE resep.Transaksi_id = ${result23[0].Transaksi_id} `
                         const query1Hasil = await query(sql1)
-                    }
+                    }   
+                }
+
+                if(data[i].status_transaksi === 'Menunggu Konfirmasi Resep'){
+                    let query0 = `SELECT resep.id as no_resep, transaksi.id as transaksi_id, transaksi.statusTransaksi_id, resep.gambar_resep, 
+                    resep.tgl_pemesanan, transaksi.no_pemesanan from resep 
+                    JOIN transaksi ON resep.Transaksi_id = transaksi.id WHERE resep.User_id = ${id} AND resep.Transaksi_id = ${data[i].id}`
+                    const transaksiResep = await query(query0)
+
+                    if(transaksiResep.length > 0){
+                        for (let i = 0; i < transaksiResep.length; i++) {
+                            let tanggal = transaksiResep[i].tgl_pemesanan
+                            let endTime2 = new Date(tanggal).getTime(tanggal) + (60000 * 5);
+                            if(newDate > endTime2){
+                                let sql = `INSERT INTO riwayat_resep (gambar, tgl_pemesanan, Transaksi_id, User_id, Resep_id, statusTransaksi_id) VALUES ('${transaksiResep[i].gambar_resep}', '${transaksiResep[i].tgl_pemesanan}','${transaksiResep[i].transaksi_id}', '${id}', '${transaksiResep[i].no_resep}', '7');`
+                                const queryHasil = await query(sql)
                     
+                                let sql1 = `DELETE FROM resep WHERE resep.Transaksi_id = ${transaksiResep[i].transaksi_id} `
+                                const query1Hasil = await query(sql1)
+                              
+                                let sql2 = `UPDATE transaksi SET statusTransaksi_id = 7 WHERE id = ${transaksiResep[i].transaksi_id};`
+                                let query2Hasil = await query(sql2);
+                            }
+                        }
+                    }
                 }
             }
 
+          
             let query5 = `SELECT resep.id as no_resep, transaksi.id as transaksi_id, resep.gambar_resep, resep.tgl_pemesanan, transaksi.no_pemesanan from resep 
             JOIN transaksi ON resep.Transaksi_id = transaksi.id WHERE resep.Transaksi_id = ?`
             for (let i = 0; i < data.length; i++) {
