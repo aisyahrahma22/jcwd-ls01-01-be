@@ -317,24 +317,80 @@ searchProducts: async(req, res) => {
     getResep: async(req, res) => {
         try {
             let id = req.dataToken.id
+            var newDate =  new Date().getTime()
 
-            let query1 = `SELECT resep.id as no_resep, transaksi.id as transaksi_id, resep.gambar_resep, 
+            let query1 = `SELECT resep.id as no_resep, transaksi.id as transaksi_id, transaksi.statusTransaksi_id, resep.gambar_resep, 
             resep.tgl_pemesanan, transaksi.no_pemesanan from resep 
             JOIN transaksi ON resep.Transaksi_id = transaksi.id WHERE resep.User_id = ${id} `
 
-            const data = await query(query1)
+            var data = await query(query1)
             console.log('data', data)
-            
-            let query2 = `SELECT transaksi.statusTransaksi_id as status_transkasi_id, statustransaksi.status_transaksi  
-            FROM transaksi JOIN statustransaksi ON transaksi.statusTransaksi_id = statustransaksi.id 
-            WHERE transaksi.User_id = ${id} and transaksi.id = ?;`
-            for (let i = 0; i < data.length; i++) {
-                let result = await query(query2, data[i].transaksi_id);
-                console.log('result', result)
-                data[i] = { ...data[i], ...result[i]};
-            }
 
-            res.status(200).send(data)
+            if(data.length > 0){
+                for (let i = 0; i < data.length; i++) {
+                  if(data[i].statusTransaksi_id === 2){
+                    let sql = `INSERT INTO riwayat_resep (gambar, tgl_pemesanan, Transaksi_id, User_id, Resep_id, statusTransaksi_id) VALUES ('${data[i].gambar_resep}', '${data[i].tgl_pemesanan}','${data[i].transaksi_id}', '${id}', '${data[i].no_resep}', '2');`
+                    const queryHasil = await query(sql)
+        
+                    let sql1 = `DELETE FROM resep WHERE resep.Transaksi_id = ${data[i].transaksi_id} `
+                    const query1Hasil = await query(sql1)
+                  
+                    let sql2 = `UPDATE transaksi SET statusTransaksi_id = 2 WHERE id = ${data[i].transaksi_id};`
+                    let query2Hasil = await query(sql2);
+                  }
+
+                  let tanggal = data[i].tgl_pemesanan
+                 
+                  let endTime2 = new Date(tanggal).getTime(tanggal) + (60000 * 5);
+
+                  if(newDate > endTime2){
+                    let sql = `INSERT INTO riwayat_resep (gambar, tgl_pemesanan, Transaksi_id, User_id, Resep_id, statusTransaksi_id) VALUES ('${data[i].gambar_resep}', '${data[i].tgl_pemesanan}','${data[i].transaksi_id}', '${id}', '${data[i].no_resep}', '7');`
+                    const queryHasil = await query(sql)
+        
+                    let sql1 = `DELETE FROM resep WHERE resep.Transaksi_id = ${data[i].transaksi_id} `
+                    const query1Hasil = await query(sql1)
+                  
+                    let sql2 = `UPDATE transaksi SET statusTransaksi_id = 7 WHERE id = ${data[i].transaksi_id};`
+                    let query2Hasil = await query(sql2);
+                    
+                  }
+                 
+                }
+
+                let query2 = `SELECT transaksi.statusTransaksi_id as status_transkasi_id, statustransaksi.status_transaksi  
+                FROM transaksi JOIN statustransaksi ON transaksi.statusTransaksi_id = statustransaksi.id 
+                WHERE transaksi.User_id = ${id} and transaksi.id = ?;`
+                for (let i = 0; i < data.length; i++) {
+                    let result = await query(query2, data[i].transaksi_id);
+                    console.log('result', result)
+                    if(result.length > 0){
+                        for (let i = 0; i < result.length; i++){
+                            if( result[i].status_transaksi === 'Dibatalkan'){
+                                res.status(200).send({
+                                    status: 200,
+                                    error: false,
+                                    message: 'Tidak Ada Data Resep Terbaru'
+                                })
+                            }else{
+                                data[i] = { ...data[i], ...result[i]};
+                                res.status(200).send(data)
+                            }
+                        }
+                    }
+                    
+                   
+                }
+            }else{
+                res.status(200).send({
+                    status: 200,
+                    error: false,
+                    message: 'Tidak Ada Data Resep Terbaru'
+                })
+            }
+            
+           
+
+          
         } catch (error) {
             res.status(400).send({
                 status: 400,
