@@ -244,9 +244,7 @@ module.exports = {
   },
   editProduct: (req, res) => {
     var produk_id = parseInt(req.query.id);
-    console.log('ini produk_id', produk_id);
     var id = req.dataToken.id;
-    console.log('ini id', id);
 
     var sql = `SELECT * from produk where id = ${produk_id};`;
     db.query(sql, (err, results) => {
@@ -262,46 +260,33 @@ module.exports = {
           }
 
           const { gambar } = req.files;
-          const imagePath = gambar ? path + '/' + gambar[0].filename : null;
-          const data = JSON.parse(req.body.data);
-          console.log('ini data ', data);
-
+          var imagePath = gambar ? path + '/' + gambar[0].filename : null;
+          var data = JSON.parse(req.body.data);
+      
           try {
             if (imagePath) {
               data.gambar = imagePath;
-            }
+            }else if(data.stok < results[0].stok){
+              return res.status(500).json({ message: 'Stok Produk Tidak Bisa Dikurangi', error: true });
+            }else{
+              let newDataStokMasuk = data.stok -  results[0].stok;
+              let sisa =  results[0].stok + newDataStokMasuk;
 
-            if (data.stok) {
-              queryStok = `SELECT stok from produk where id = ${produk_id};`;
-              db.query(queryStok, (err1, results1) => {
-                if (err1) {
+              queryStokMasuk = `INSERT INTO detailstokproduk (keluar, aktivitas, masuk, Produk_id, admin_id, sisa) VALUES (0, "Penerimaan Barang", ${newDataStokMasuk}, ${produk_id}, ${id}, ${sisa});`;
+              db.query(queryStokMasuk, (err2, results2) => {
+                if (err2) {
                   return res.status(500).json({ message: 'Server Error', error: err.message });
                 }
 
-                if (data.stok > results1[0].stok) {
-                  let newDataStokMasuk = data.stok - results1[0].stok;
-                  let sisa = results1[0].stok + newDataStokMasuk;
-
-                  queryStokMasuk = `INSERT INTO detailstokproduk (keluar, aktivitas, masuk, Produk_id, admin_id, sisa) VALUES (0, "Penerimaan Barang", ${newDataStokMasuk}, ${produk_id}, ${id}, ${sisa});`;
-                  db.query(queryStokMasuk, (err2, results2) => {
-                    if (err2) {
-                      return res.status(500).json({ message: 'Server Error', error: err.message });
-                    }
-
-                    queryGetStokMasuk = `Select * from detailstokproduk where detailstokproduk.Produk_id = ${produk_id}`;
-                    db.query(queryGetStokMasuk, (err3, results3) => {
-                      console.log('results3', results3);
-                      console.log('err3', err3);
-                      if (err3) {
-                        return res.status(500).json({ message: 'Server Error', error: err.message });
-                      }
-                    });
-                  });
-                }
+                queryGetStokMasuk = `Select * from detailstokproduk where detailstokproduk.Produk_id = ${produk_id}`;
+                db.query(queryGetStokMasuk, (err3, results3) => {
+                  if (err3) {
+                    return res.status(500).json({ message: 'Server Error', error: err.message });
+                  }
+                });
               });
-            }
 
-            sql = `Update produk set ? where id = ${produk_id};`;
+              sql = `Update produk set ? where id = ${produk_id};`;
             db.query(sql, data, (error1, results1) => {
               if (error1) {
                 if (imagePath) {
@@ -323,9 +308,11 @@ module.exports = {
                 return res.status(200).send({ message: 'Update Product Success', result: results4 });
               });
             });
+            }
+
+            
           } catch (errors) {
-            console.log('errors.message', errors.message);
-            return res.status(500).json({ message: 'Server Error', error: erros.message });
+            return res.status(500).json({ message: 'Server Error', error: errors.message });
           }
         });
       }
