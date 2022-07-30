@@ -14,7 +14,7 @@ const AdminRouters = require('./Routers/AdminRouters');
 const RajaOngkir = require('./Routers/RajaOngkirRoute');
 
 app.get("/", (req, res) => {
-  res.status(200).send("<h1>API Backend for Bootcamp Project</h1>");
+  res.status(200).send("<h1>API Server JCWDLS001-01</h1>");
 });
 
 app.use('/admin', AdminRouters);
@@ -25,4 +25,4 @@ app.use('/rajaongkir', RajaOngkir);
 
 app.use('/Public/', express.static(__dirname + '/Public'));
 
-app.listen(PORT, () => console.log('API Running on PORT ' + PORT));
+app.listen(PORT, () => console.log('API Server JCWDLS001-01 Running on PORT ' + PORT));
