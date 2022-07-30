@@ -2,6 +2,7 @@ const db = require('./../Connection/Connection');
 const util = require('util');
 const query = util.promisify(db.query).bind(db);
 const { uploader } = require('../Helpers/Uploader');
+const axios = require('axios');
 
 // Import Validator
 const validator = require('validator');
@@ -898,12 +899,6 @@ module.exports = {
       JOIN produk ON detailstokproduk.Produk_id = produk.id WHERE detailstokproduk.aktivitas = "Penerimaan Barang" ORDER BY detailstokproduk.id`;
       var result = await query(query2);
       console.log('result', result);
-
-      // yang harus dilakukan di FE
-      // mapping data
-      // get harga untuk keluar tinggal dikali aja di frontend stokMasuk * hargaBeli
-      // no fakturnya dikombinasi terserah dari id yang ada + string (kreasi sendiri di FE)
-      // saldo dihitung dari masuk - keluar
       res.status(200).send({
         status: 200,
         error: false,
@@ -913,6 +908,282 @@ module.exports = {
     } catch (error) {
       res.status(400).send({
         status: 400,
+        error: true,
+        message: error.message,
+      });
+    }
+  },
+  getStatistik: async (req, res) => {
+    try {
+      // GET DATA Pesanan Baru
+      let query1 = `SELECT count(id) AS TotalPesananBaru FROM group01_pharmacy.transaksi where statusTransaksi_id = 8;`;
+      var PesananBaru = await query(query1);
+
+      // GET DATA Di Proses
+      let query2 = `SELECT count(id) AS Diproses FROM group01_pharmacy.transaksi where statusTransaksi_id = 4;`;
+      var Diproses = await query(query2);
+
+      // GET DATA Di Kirim
+      let query3 = `SELECT count(id) AS Dikirim FROM group01_pharmacy.transaksi where statusTransaksi_id = 5;`;
+      var Dikirim = await query(query3);
+
+      // GET DATA Selesai
+      let query4 = `SELECT count(id) AS Selesai FROM group01_pharmacy.transaksi where statusTransaksi_id = 6;`;
+      var Selesai = await query(query4);
+
+      // GET DATA Di Batalkan
+      let query5 = `SELECT count(id) AS Dibatalkan FROM group01_pharmacy.transaksi where statusTransaksi_id = 7;`;
+      var Dibatalkan = await query(query5);
+
+      // GET DATA Rata-rata penjualan
+      let query6 = `SELECT avg(quantity) as Rata_penjualan FROM group01_pharmacy.detailtransaksi;`;
+      var Rata_penjualan = await query(query6);
+
+      res.status(200).send({
+        status: 200,
+        error: false,
+        PesananBaru: PesananBaru,
+        Diproses: Diproses,
+        Dikirim: Dikirim,
+        Selesai: Selesai,
+        Dibatalkan: Dibatalkan,
+        Rata_penjualan: Rata_penjualan,
+      });
+    } catch (error) {
+      res.status(400).send({
+        status: 400,
+        error: true,
+        message: error.message,
+      });
+    }
+  },
+  getTransaksiBulanan: async (req, res) => {
+    try {
+      const tahun = req.headers.tahun;
+
+      // GET DATA bulan january
+      let query1 = `SELECT count(id) as total_transaksi FROM group01_pharmacy.transaksi where created_at LIKE '${tahun}-01%';`;
+      var jan = await query(query1);
+      // GET DATA bulan feb
+      let query2 = `SELECT count(id) as total_transaksi FROM group01_pharmacy.transaksi where created_at LIKE '${tahun}-02%';`;
+      var feb = await query(query2);
+      // GET DATA bulan mar
+      let query3 = `SELECT count(id) as total_transaksi FROM group01_pharmacy.transaksi where created_at LIKE '${tahun}-03%';`;
+      var mar = await query(query3);
+      // GET DATA bulan apr
+      let query4 = `SELECT count(id) as total_transaksi FROM group01_pharmacy.transaksi where created_at LIKE '${tahun}-04%';`;
+      var apr = await query(query4);
+      // GET DATA bulan mei
+      let query5 = `SELECT count(id) as total_transaksi FROM group01_pharmacy.transaksi where created_at LIKE '${tahun}-05%';`;
+      var mei = await query(query5);
+      // GET DATA bulan jun
+      let query6 = `SELECT count(id) as total_transaksi FROM group01_pharmacy.transaksi where created_at LIKE '${tahun}-06%';`;
+      var jun = await query(query6);
+      // GET DATA bulan jul
+      let query7 = `SELECT count(id) as total_transaksi FROM group01_pharmacy.transaksi where created_at LIKE '${tahun}-07%';`;
+      var jul = await query(query7);
+      // GET DATA bulan agust
+      let query8 = `SELECT count(id) as total_transaksi FROM group01_pharmacy.transaksi where created_at LIKE '${tahun}-08%';`;
+      var ags = await query(query8);
+      // GET DATA bulan spt
+      let query9 = `SELECT count(id) as total_transaksi FROM group01_pharmacy.transaksi where created_at LIKE '${tahun}-09%';`;
+      var spt = await query(query9);
+      // GET DATA bulan okt
+      let query10 = `SELECT count(id) as total_transaksi FROM group01_pharmacy.transaksi where created_at LIKE '${tahun}-10%';`;
+      var okt = await query(query10);
+      // GET DATA bulan nov
+      let query11 = `SELECT count(id) as total_transaksi FROM group01_pharmacy.transaksi where created_at LIKE '${tahun}-11%';`;
+      var nov = await query(query11);
+      // GET DATA bulan des
+      let query12 = `SELECT count(id) as total_transaksi FROM group01_pharmacy.transaksi where created_at LIKE '${tahun}-12%';`;
+      var des = await query(query12);
+
+      res.status(200).send({
+        status: 200,
+        error: false,
+        jan: jan,
+        feb: feb,
+        mar: mar,
+        apr: apr,
+        mei: mei,
+        jun: jun,
+        jul: jul,
+        ags: ags,
+        spt: spt,
+        okt: okt,
+        nov: nov,
+        des: des,
+      });
+    } catch (error) {
+      res.status(500).send({
+        status: 500,
+        error: true,
+        message: error.message,
+      });
+    }
+  },
+  getTotalPendapat: async (req, res) => {
+    try {
+      const tahun = req.headers.tahun;
+
+      // GET DATA bulan january
+      let query1 = `SELECT  sum(total_pembayaran) as total_pendapatan FROM group01_pharmacy.transaksi where statusTransaksi_id = 6 AND created_at LIKE '${tahun}-01%';`;
+      var jan = await query(query1);
+      // GET DATA bulan feb
+      let query2 = `SELECT  sum(total_pembayaran) as total_pendapatan FROM group01_pharmacy.transaksi where statusTransaksi_id = 6 AND created_at LIKE '${tahun}-02%';`;
+      var feb = await query(query2);
+      // GET DATA bulan mar
+      let query3 = `SELECT  sum(total_pembayaran) as total_pendapatan FROM group01_pharmacy.transaksi where statusTransaksi_id = 6 AND created_at LIKE '${tahun}-03%';`;
+      var mar = await query(query3);
+      // GET DATA bulan apr
+      let query4 = `SELECT  sum(total_pembayaran) as total_pendapatan FROM group01_pharmacy.transaksi where statusTransaksi_id = 6 AND created_at LIKE '${tahun}-04%';`;
+      var apr = await query(query4);
+      // GET DATA bulan mei
+      let query5 = `SELECT  sum(total_pembayaran) as total_pendapatan FROM group01_pharmacy.transaksi where statusTransaksi_id = 6 AND created_at LIKE '${tahun}-05%';`;
+      var mei = await query(query5);
+      // GET DATA bulan jun
+      let query6 = `SELECT  sum(total_pembayaran) as total_pendapatan FROM group01_pharmacy.transaksi where statusTransaksi_id = 6 AND created_at LIKE '${tahun}-06%';`;
+      var jun = await query(query6);
+      // GET DATA bulan jul
+      let query7 = `SELECT  sum(total_pembayaran) as total_pendapatan FROM group01_pharmacy.transaksi where statusTransaksi_id = 6 AND created_at LIKE '${tahun}-07%';`;
+      var jul = await query(query7);
+      // GET DATA bulan agust
+      let query8 = `SELECT  sum(total_pembayaran) as total_pendapatan FROM group01_pharmacy.transaksi where statusTransaksi_id = 6 AND created_at LIKE '${tahun}-08%';`;
+      var ags = await query(query8);
+      // GET DATA bulan spt
+      let query9 = `SELECT  sum(total_pembayaran) as total_pendapatan FROM group01_pharmacy.transaksi where statusTransaksi_id = 6 AND created_at LIKE '${tahun}-09%';`;
+      var spt = await query(query9);
+      // GET DATA bulan okt
+      let query10 = `SELECT  sum(total_pembayaran) as total_pendapatan FROM group01_pharmacy.transaksi where statusTransaksi_id = 6 AND created_at LIKE '${tahun}-10%';`;
+      var okt = await query(query10);
+      // GET DATA bulan nov
+      let query11 = `SELECT  sum(total_pembayaran) as total_pendapatan FROM group01_pharmacy.transaksi where statusTransaksi_id = 6 AND created_at LIKE '${tahun}-11%';`;
+      var nov = await query(query11);
+      // GET DATA bulan des
+      let query12 = `SELECT  sum(total_pembayaran) as total_pendapatan FROM group01_pharmacy.transaksi where statusTransaksi_id = 6 AND created_at LIKE '${tahun}-12%';`;
+      var des = await query(query12);
+
+      res.status(200).send({
+        status: 200,
+        error: false,
+        jan: jan,
+        feb: feb,
+        mar: mar,
+        apr: apr,
+        mei: mei,
+        jun: jun,
+        jul: jul,
+        ags: ags,
+        spt: spt,
+        okt: okt,
+        nov: nov,
+        des: des,
+      });
+    } catch (error) {
+      res.status(500).send({
+        status: 500,
+        error: true,
+        message: error.message,
+      });
+    }
+  },
+  getTotalPembatalan: async (req, res) => {
+    try {
+      const tahun = req.headers.tahun;
+
+      // GET DATA bulan january
+      let query1 = `SELECT  count(id) as total_batal FROM group01_pharmacy.transaksi where statusTransaksi_id = 7 AND created_at LIKE '${tahun}-01%';`;
+      var jan = await query(query1);
+      // GET DATA bulan feb
+      let query2 = `SELECT  count(id) as total_batal FROM group01_pharmacy.transaksi where statusTransaksi_id = 7 AND created_at LIKE '${tahun}-02%';`;
+      var feb = await query(query2);
+      // GET DATA bulan mar
+      let query3 = `SELECT  count(id) as total_batal FROM group01_pharmacy.transaksi where statusTransaksi_id = 7 AND created_at LIKE '${tahun}-03%';`;
+      var mar = await query(query3);
+      // GET DATA bulan apr
+      let query4 = `SELECT  count(id) as total_batal FROM group01_pharmacy.transaksi where statusTransaksi_id = 7 AND created_at LIKE '${tahun}-04%';`;
+      var apr = await query(query4);
+      // GET DATA bulan mei
+      let query5 = `SELECT  count(id) as total_batal FROM group01_pharmacy.transaksi where statusTransaksi_id = 7 AND created_at LIKE '${tahun}-05%';`;
+      var mei = await query(query5);
+      // GET DATA bulan jun
+      let query6 = `SELECT  count(id) as total_batal FROM group01_pharmacy.transaksi where statusTransaksi_id = 7 AND created_at LIKE '${tahun}-06%';`;
+      var jun = await query(query6);
+      // GET DATA bulan jul
+      let query7 = `SELECT  count(id) as total_batal FROM group01_pharmacy.transaksi where statusTransaksi_id = 7 AND created_at LIKE '${tahun}-07%';`;
+      var jul = await query(query7);
+      // GET DATA bulan agust
+      let query8 = `SELECT  count(id) as total_batal FROM group01_pharmacy.transaksi where statusTransaksi_id = 7 AND created_at LIKE '${tahun}-08%';`;
+      var ags = await query(query8);
+      // GET DATA bulan spt
+      let query9 = `SELECT  count(id) as total_batal FROM group01_pharmacy.transaksi where statusTransaksi_id = 7 AND created_at LIKE '${tahun}-09%';`;
+      var spt = await query(query9);
+      // GET DATA bulan okt
+      let query10 = `SELECT  count(id) as total_batal FROM group01_pharmacy.transaksi where statusTransaksi_id = 7 AND created_at LIKE '${tahun}-10%';`;
+      var okt = await query(query10);
+      // GET DATA bulan nov
+      let query11 = `SELECT  count(id) as total_batal FROM group01_pharmacy.transaksi where statusTransaksi_id = 7 AND created_at LIKE '${tahun}-11%';`;
+      var nov = await query(query11);
+      // GET DATA bulan des
+      let query12 = `SELECT  count(id) as total_batal FROM group01_pharmacy.transaksi where statusTransaksi_id = 7 AND created_at LIKE '${tahun}-12%';`;
+      var des = await query(query12);
+
+      res.status(200).send({
+        status: 200,
+        error: false,
+        jan: jan,
+        feb: feb,
+        mar: mar,
+        apr: apr,
+        mei: mei,
+        jun: jun,
+        jul: jul,
+        ags: ags,
+        spt: spt,
+        okt: okt,
+        nov: nov,
+        des: des,
+      });
+    } catch (error) {
+      res.status(500).send({
+        status: 500,
+        error: true,
+        message: error.message,
+      });
+    }
+  },
+  getDataLaba: async (req, res) => {
+    try {
+      const tahun = req.headers.tahun;
+
+      // GET DATA Penjualan barang
+      let query1 = `SELECT sum(total_pembayaran) as Penjualan_barang FROM group01_pharmacy.transaksi where statusTransaksi_id = 6 AND created_at LIKE '${tahun}%';`;
+      var penjualanBarang = await query(query1);
+      // GET DATA Ongkir
+      let query2 = `SELECT sum(ongkir) as ongkir FROM group01_pharmacy.transaksi where statusTransaksi_id = 6 AND created_at LIKE '${tahun}%';`;
+      var ongkir = await query(query2);
+      // GET DATA persediaan awal
+      let query3 = `SELECT sum(total_pembayaran - 15000) as persediaan_awal FROM group01_pharmacy.transaksi where statusTransaksi_id = 6 AND created_at LIKE '${tahun}%';`;
+      var PersediaanAwal = await query(query3);
+      // GET DATA pembelian kotor
+      let query4 = `SELECT sum(total_pembayaran - 20000) as pembelian_kotor FROM group01_pharmacy.transaksi where statusTransaksi_id = 6 AND created_at LIKE '${tahun}%';`;
+      var PembelianKotor = await query(query4);
+      // GET DATA pembelian kotor
+      let query5 = `SELECT sum(total_pembayaran + 2000) as persediaan_akhir FROM group01_pharmacy.transaksi where statusTransaksi_id = 6 AND created_at LIKE '${tahun}%';`;
+      var persediaanAkhir = await query(query5);
+
+      res.status(200).send({
+        status: 200,
+        error: false,
+        penjualan_barang: penjualanBarang,
+        ongkir: ongkir,
+        persediaan_awal: PersediaanAwal,
+        pembelian_kotor: PembelianKotor,
+        persediaan_akhir: persediaanAkhir,
+      });
+    } catch (error) {
+      res.status(500).send({
+        status: 500,
         error: true,
         message: error.message,
       });
