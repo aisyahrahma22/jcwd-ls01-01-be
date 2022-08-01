@@ -261,13 +261,20 @@ module.exports = {
           }
 
           const { gambar } = req.files;
+          console.log(' { gambar }',  { gambar })
           var imagePath = gambar ? path + '/' + gambar[0].filename : null;
+          console.log('imagePath', imagePath)
           var data = JSON.parse(req.body.data);
+          console.log('data', data)
+          console.log('data.gambar', data.gambar)
       
           try {
             if (imagePath) {
               data.gambar = imagePath;
-            }else if(data.stok < results[0].stok){
+              console.log(' data.gambar bawah',  data.gambar)
+            }
+            
+            if(data.stok < results[0].stok){
               return res.status(500).json({ message: 'Stok Produk Tidak Bisa Dikurangi', error: true });
             }else{
               let newDataStokMasuk = data.stok -  results[0].stok;
@@ -287,6 +294,7 @@ module.exports = {
                 });
               });
 
+              console.log('data bawah', data)
               sql = `Update produk set ? where id = ${produk_id};`;
             db.query(sql, data, (error1, results1) => {
               if (error1) {
