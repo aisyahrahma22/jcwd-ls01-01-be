@@ -472,14 +472,19 @@ module.exports = {
             console.log('data', data)
             for (let i = 0; i < data.length; i++) { 
                 if(data[i].status_transaksi === 'Menunggu Checkout'){
-                    let query23 = `SELECT resep.id, resep.gambar_resep, resep.User_id, resep.Transaksi_id FROM resep WHERE resep.Transaksi_id = ${data[i].id}`
-                    let result23 = await query(query23)
-                    if(result23.length > 0){
-                        let sql = `INSERT INTO riwayat_resep (gambar, tgl_pemesanan, Transaksi_id, User_id, Resep_id, statusTransaksi_id) VALUES ('${result23[0].gambar_resep}', '${result23[0].tgl_pemesanan}','${result23[0].Transaksi_id}', '${result23[0].User_id}', '${result23[0].id}', '2');`
-                        const queryHasil = await query(sql)
-                        let sql1 = `DELETE FROM resep WHERE resep.Transaksi_id = ${result23[0].Transaksi_id} `
-                        const query1Hasil = await query(sql1)
-                    }   
+                    let query24 = `SELECT * FROM riwayat_resep WHERE Transaksi_id = ${data[i].id}`
+                    let result24 = await query(query24)
+                    if(result24.length < 0){
+                        let query23 = `SELECT resep.id, resep.gambar_resep, resep.User_id, resep.Transaksi_id FROM resep WHERE resep.Transaksi_id = ${data[i].id}`
+                        let result23 = await query(query23)
+                        if(result23.length > 0){
+                            let sql = `INSERT INTO riwayat_resep (gambar, tgl_pemesanan, Transaksi_id, User_id, Resep_id, statusTransaksi_id) VALUES ('${result23[0].gambar_resep}', '${result23[0].tgl_pemesanan}','${result23[0].Transaksi_id}', '${result23[0].User_id}', '${result23[0].id}', '2');`
+                            const queryHasil = await query(sql)
+                            let sql1 = `DELETE FROM resep WHERE resep.Transaksi_id = ${result23[0].Transaksi_id} `
+                            const query1Hasil = await query(sql1)
+                        }   
+                    }
+                  
                 }
 
                 if(data[i].status_transaksi === 'Menunggu Konfirmasi Resep'){
